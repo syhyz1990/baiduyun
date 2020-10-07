@@ -21,33 +21,29 @@
 
 [English Docs](README_EN.md) | [中文文档](README.md)
 
-👉 This script is for multi-platform browsers that support Tampermonkey or ViolentMonkey extensions, such as Chrome, 360, QQ, UC, etc.
+👉 This script is suitable for browsers that support the installation of Tampermonkey or Violent Monkey extensions on multiple platforms, such as Chrome, 360, QQ, UC, etc.
 
-Support Baidu network disk PC-side webpage to get the share link download address and my network disk download address. After installation, the [Download Assistant] button will appear on the corresponding interface, and the multi-threaded download tool can achieve the effect of speed increase.
-
-**Since version 2.9.1, you can get the link on https://www.baidusu.com directly**
-
-**Since version 2.5.0, scripts support aria2c links**
+Support Baidu SkyDrive PC web page to get the share link download address and my SkyDrive download address. After installation, a [Download Assistant] button will appear on the corresponding interface, which can be used with multi-threaded download tools to achieve speed-up.
 
 ## 🎨 Interface
 
-![](https://i.loli.net/2019/09/15/VkxjsPX6pmuAvot.png)
+![](https://i.loli.net/2020/08/18/gHYE8da6XKRJAIj.png)
 
-## 📖 Tutorials
+## 📖 Tutorial
 
-- [Windows](https://www.baiduyun.wiki/zh-cn/windows.html)
+- [Windows](https://www.baiduyun.wiki/zh-cn/windows/)
 
-- [MacOS](https://www.baiduyun.wiki/zh-cn/mac.html)
+- [MacOS](https://www.baiduyun.wiki/zh-cn/mac/)
 
-- [Android](https://www.baiduyun.wiki/zh-cn/android.html)
+- [Linux](https://www.baiduyun.wiki/zh-cn/linux/)
+
+- [Android](https://www.baiduyun.wiki/zh-cn/android/)
 
 ## 💽 Install
 
-- [Address](https://www.baiduyun.wiki/install.html)
+Please make sure you have installed [Tampermonkey](http://pan.baiduyun.wiki/down)
 
-## 🔔 Changelog
-
-[View more](https://www.baiduyun.wiki/zh-cn/changelog.html)
+- [Install](https://www.baiduyun.wiki/install.html)
 
 ## ✨ Function
 
@@ -55,25 +51,20 @@ Get the real-chain download address of Baidu's network disk, speed up the downlo
 
 ## 🚀 Speed
 
-**[Xdown(recommended)](http://pan.baiduyun.wiki/down)**
+Speed test of SVIP using different download software:
 
-![XDown](https://i.loli.net/2019/09/19/187PZzbespSWMKx.gif)
+- **[IDM download speed](http://pan.baiduyun.wiki/down)**
 
-**IDM**
+![IDM](https://i.loli.net/2020/10/07/PDeTtzvUNXEcdwB.gif)
 
-![IDM](https://i.loli.net/2019/09/15/u9dRYDn6ekrKfXy.gif)
+- **[XDown download speed](http://pan.baiduyun.wiki/down)**
+
+![XDown](https://i.loli.net/2020/10/07/jOoC17iVQ8ef3X4.gif)
+
+- **[Motrix download speed](http://pan.baiduyun.wiki/down)**
+
+![Motrix](https://i.loli.net/2020/10/07/KEqvPQeC7YDVTs6.gif)
 
 ## 👻 Notes
-Do not support checking the folder, you can select multiple files at the same time
 
-## 📜 Disclaimer
-This script is only run on the browser side. The source code is publicly visible. It can only be used for research purposes. It should not be used for illegal profit. For example, legal disputes are irrelevant to the script author!!!
-
-## 💻 Feedback
-
-[Feedback](https://www.baiduyun.wiki/zh-cn/feedback.html)
-
-## 🤓 Donate
-If you feel that the script is helpful to you, you can scan the QR code via Alipay or WeChat, donate X dollar, ^_^, thank you!
-
-![WeChat](https://i.loli.net/2019/05/04/5ccc6d088bc31.jpg) ![Alipay](https://i.loli.net/2019/05/04/5ccc6d08a22f7.jpg)
+Folders are not supported, you can select files to download in batches, please refer to [FAQ](https://www.baiduyun.wiki/zh-cn/question.html)
