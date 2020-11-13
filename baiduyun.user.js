@@ -33,6 +33,7 @@
 // @grant             GM_openInTab
 // @grant             GM_info
 // @grant             GM_registerMenuCommand
+// @grant             GM_cookie
 // ==/UserScript==
 
 ;(() => {
@@ -85,6 +86,20 @@
         console.group('[网盘直链下载助手]');
         console.log(c1, c2, c3);
         console.groupEnd();
+    }
+
+    function updateBDUSS_GM() {
+        return new Promise((resolve) => {
+            if (GM_cookie) {
+                GM_cookie('list', { name: 'BDUSS' }, function (cookies, error) {
+                    if (!error) {
+                        setStorage("baiduyunPlugin_BDUSS", JSON.stringify({ BDUSS: cookies[0].value }))
+                        console.log("BDUSS 已更新", cookies[0].value);
+                        resolve(cookies[0].value);
+                    }
+                });
+            }
+        });
     }
 
     function getBDUSS() {
@@ -548,6 +563,7 @@
             registerEventListener();
             addButton();
             createIframe();
+            updateBDUSS_GM();
             dialog = new Dialog({addCopy: true});
             clog('下载助手加载成功！当前版本：', version);
         };
@@ -660,7 +676,7 @@
             $('.' + classMap['list-tools']).css('height', '40px');
         }
 
-        function batchClick(event) {
+        async function batchClick(event) {
             selectFileList = getSelectedFile();
             if (selectFileList.length === 0) {
                 Toast.fire({
@@ -669,6 +685,7 @@
                 });
                 return;
             }
+            await updateBDUSS_GM();
             //clog('选中文件列表：', selectFileList);
             let id = event.target.id;
             let tip;
@@ -967,7 +984,8 @@
             }
 
             buttonTarget = 'ariclink';
-            getDownloadLink((downloadLink) => {
+            getDownloadLink(async (downloadLink) => {
+                await updateBDUSS_GM();
                 if (downloadLink === undefined) return;
 
                 if (downloadLink.errno == -20) {
@@ -1098,7 +1116,8 @@
                 return false;
             }
             buttonTarget = 'download';
-            getDownloadLink((downloadLink) => {
+            getDownloadLink(async (downloadLink) => {
+                await updateBDUSS_GM();
                 if (downloadLink === undefined) return;
 
                 if (downloadLink.errno == -20) {
@@ -1168,7 +1187,8 @@
                 $('#dialog-err').text('验证码输入错误，请重新输入');
                 return;
             }
-            getDownloadLinkWithVCode(val, (result) => {
+            getDownloadLinkWithVCode(val, async (result) => {
+                await updateBDUSS_GM();
                 if (result.errno == -20) {
                     vcodeDialog.close();
                     $('#dialog-err').text('验证码输入错误，请重新输入');
@@ -1250,8 +1270,9 @@
             }
 
             buttonTarget = 'link';
-            getDownloadLink((downloadLink) => {
+            getDownloadLink(async (downloadLink) => {
                 if (downloadLink === undefined) return;
+                await updateBDUSS_GM();
 
                 if (downloadLink.errno == -20) {
                     vcode = getVCode();
