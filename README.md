@@ -1,19 +1,16 @@
 <p align="center">
   <a href="https://www.baiduyun.wiki">
-    <img width="160" src="https://www.baiduyun.wiki/logo.png" alt="百度网盘直链下载助手">
+    <img width="160" src="https://www.baiduyun.wiki/logo.png" alt="网盘直链下载助手">
   </a>
 </p>
 
-<h1 align="center">百度网盘直链下载助手</h1>
+<h1 align="center">网盘直链下载助手</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/tamperMonkey-v4.8-brightgreen.svg" alt="tampermonkey">
   <img src="https://img.shields.io/badge/chrome%20x64-v76.0-brightgreen.svg" alt="chrome">
   <img src="https://img.shields.io/badge/safari%20-v12.0-brightgreen.svg" alt="safari">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Mac%20%7C%20Android-blue.svg" alt="platform">
-  <a href="https://www.baiduyun.wiki/zh-cn/donate.html">
-    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
-  </a>
   <a href="https://github.com/syhyz1990/baiduyun">
     <img src="https://img.shields.io/badge/Star-10k+-yellow.svg?style=social&logo=github" alt="stars">
   </a>
@@ -21,9 +18,7 @@
 
 [中文文档](README.md) | [English Docs](README_EN.md)
 
-👉 本脚本适用于多平台支持安装 Tampermonkey 或 暴力猴扩展的浏览器，如Chrome，360，QQ，UC等。
-
-支持百度网盘PC端网页获取分享链接下载地址和我的网盘下载地址。安装后会在对应界面出现【下载助手】按钮, 配合多线程下载工具达到提速的效果。
+👉 【网盘直链下载助手】是一款免费开源获取网盘文件真实下载地址的油猴脚本，基于PCSAPI，支持Windows，Mac，Linux，Android等多平台，可使用IDM，Xdown等多线程加速工具加速下载，支持RPC协议远程下载。
 
 ## 🎨 助手界面
 ![](https://i.loli.net/2020/08/18/gHYE8da6XKRJAIj.png)
