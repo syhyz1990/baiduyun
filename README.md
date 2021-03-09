@@ -21,13 +21,14 @@
 👉 【网盘直链下载助手】是一款免费开源获取网盘文件真实下载地址的油猴脚本，基于PCSAPI，支持Windows，Mac，Linux，Android等多平台，可使用IDM，Xdown等多线程加速工具加速下载，支持RPC协议远程下载。
 
 ## 🎨 助手界面
-![](https://i.loli.net/2020/08/18/gHYE8da6XKRJAIj.png)
+![](https://i.loli.net/2021/03/10/2FoQe6ExJXD43Up.gif)
 
 ## 🔧 插件功能
   - [x] 支持多平台Windows，Linux，Mac
   - [x] 支持批量获取下载链接
   - [x] 支持使用RPC协议发送链接至本地或远程下载
   - [x] 支持IDM，XDown，Aria等多线程下载器
+  - [x] 支持更换皮肤
   - [x] 支持自动更新
 
 ## 📖 使用教程
@@ -41,6 +42,7 @@
 - [Android平台使用教程](https://www.baiduyun.wiki/zh-cn/android/)
 
 ## 💽 安装助手
+
 请确保已先安装 [Tampermonkey](http://pan.baiduyun.wiki/down) 脚本管理器
 
 - [安装地址](https://www.baiduyun.wiki/install.html)
@@ -51,15 +53,15 @@
 
 - **[IDM下载速度](http://pan.baiduyun.wiki/down)**
 
-![IDM](https://i.loli.net/2020/10/07/PDeTtzvUNXEcdwB.gif)
+![IDM](https://i.loli.net/2021/03/10/5fPhsmidwInJrvq.gif)
 
 - **[XDown下载速度](http://pan.baiduyun.wiki/down)**
 
-![XDown](https://i.loli.net/2020/10/07/jOoC17iVQ8ef3X4.gif)
+![XDown](https://i.loli.net/2021/03/10/Sp7J2xTlBgLhdNQ.gif)
 
 - **[Motrix下载速度](http://pan.baiduyun.wiki/down)**
 
-![Motrix](https://i.loli.net/2020/10/07/KEqvPQeC7YDVTs6.gif)
+![Motrix](https://i.loli.net/2021/03/10/dH5c2sLtCVjfrUm.gif)
 
 ## 👻 注意事项
 不支持文件夹，可批量选择文件进行下载，更多请参考 [常见问题](https://www.baiduyun.wiki/zh-cn/question.html)
