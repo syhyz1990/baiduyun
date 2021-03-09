@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.0.0
+// @version           5.0.1
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
@@ -40,7 +40,8 @@
 (function () {
     'use strict';
 
-    let pageType = '', selectFile = [], params = {}, yunData = {}, mode = '', width = 800, pan = {}, color = '',doc = $(document);
+    let pageType = '', selectFile = [], params = {}, yunData = {}, mode = '', width = 800, pan = {}, color = '',
+        doc = $(document), progress = {}, request = {}, ins = {}, idm = {};
     const scriptInfo = GM_info.script;
     const version = scriptInfo.version;
     const author = scriptInfo.author;
@@ -83,6 +84,9 @@
         setStorage(key, value) {
             return localStorage.setItem(key, value);
         },
+        setClipboard(text) {
+            GM_setClipboard(text, 'text');
+        },
         encode(str) {
             return btoa(unescape(encodeURIComponent(str)));
         },
@@ -103,6 +107,14 @@
             let BDUSS = JSON.parse(baiduyunPlugin_BDUSS).BDUSS || '';
             return BDUSS;
         },
+        getExtension(name) {
+            let reg = /(?!\.)\w+$/;
+            if (reg.test(name)) {
+                let match = name.match(reg);
+                return match[0].toUpperCase();
+            }
+            return '';
+        },
         convertToAria(link, filename, ua) {
             let BDUSS = this.getBDUSS();
             filename = filename.replace(' ', '_');
@@ -113,6 +125,16 @@
                     link: pan.assistant,
                     text: pan.init[5]
                 };
+            }
+        },
+        creteUrlDownload(blob, filename) {
+            if (blob instanceof Blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
             }
         },
         message: {
@@ -132,20 +154,17 @@
                 toast.fire({title: text, icon: 'question'});
             }
         },
-        post(url, data, headers, type, extra) {
+        post(url, data, headers, type) {
             return new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
+                let requestObj = GM_xmlhttpRequest({
                     method: "POST", url, headers, data,
                     responseType: type || 'json',
                     onload: (res) => {
                         if (type === 'blob') {
-                            const url = URL.createObjectURL(res.response);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = extra.filename;
-                            a.click();
+                            resolve(res);
+                        } else {
+                            resolve(res.response || res.responseText);
                         }
-                        resolve(res.response || res.responseText);
                     },
                     onerror: (err) => {
                         reject(err);
@@ -155,46 +174,39 @@
         },
         get(url, headers, type, extra) {
             return new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
+                let requestObj = GM_xmlhttpRequest({
                     method: "GET", url, headers,
                     responseType: type || 'json',
                     onload: (res) => {
-                        if (type === 'blob') {
-                            const url = URL.createObjectURL(res.response);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = extra.filename;
-                            a.click();
+                        if (res.status === 204) {
+                            requestObj.abort();
+                            idm[extra.index] = true;
                         }
-                        resolve(res.response || res.responseText);
+                        if (type === 'blob') {
+                            if (res.status === 200) {
+                                util.creteUrlDownload(res.response, extra.filename);
+                            }
+                            resolve(res);
+                        } else {
+                            resolve(res.response || res.responseText);
+                        }
+                    },
+                    onprogress: (res) => {
+                        if (extra && extra.filename && extra.index) {
+                            res.total > 0 ? progress[extra.index] = (res.loaded * 100 / res.total).toFixed(2): progress[extra.index] = 0.00
+                        }
+                    },
+                    onloadstart() {
+                        if (extra && extra.filename && extra.index) {
+                            request[extra.index] = requestObj;
+                        }
                     },
                     onerror: (err) => {
                         reject(err);
                     },
                 });
             });
-        },
-        head(url, headers, type, extra) {
-            return new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
-                    method: "HEAD", url, headers,
-                    responseType: type || 'json',
-                    onload: (res) => {
-                        if (type === 'blob') {
-                            const url = URL.createObjectURL(res.response);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = extra.filename;
-                            a.click();
-                        }
-                        resolve(res.response || res.responseText);
-                    },
-                    onerror: (err) => {
-                        reject(err);
-                    },
-                });
-            });
-        },
+        }
     };
 
     let main = {
@@ -242,6 +254,20 @@
             .panlinker-item { display: flex; align-items: center; line-height: 22px; }
             .panlinker-item-title { flex: 0 0 150px; text-align: left;margin-right: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
             .panlinker-item-link { flex: 1; overflow: hidden;text-align: left; white-space: nowrap; text-overflow: ellipsis; }
+            .panlinker-item-tip { display: flex; justify-content: space-between;flex: 1}
+            .panlinker-back { width: 70px; background: #ddd; border-radius: 3px;cursor:pointer;margin:1px 0 }
+            .panlinker-ext { display: inline-block; width: 44px; background: #999; color: #fff; height: 16px; line-height: 16px; font-size: 12px; border-radius: 3px;}
+            .panlinker-retry {padding: 3px 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;}
+            .panlinker-browserdownload {padding: 3px 10px; background: ${color}; color: #fff; border-radius: 3px; cursor: pointer;}
+            .panlinker-item-progress { display:flex;flex: 1;align-items:center}
+            .panlinker-progress { display: inline-block;vertical-align: middle;width: 100%; box-sizing: border-box;line-height: 1;position: relative;height:15px; flex: 1}
+            .panlinker-progress-outer { height: 15px;border-radius: 100px;background-color: #ebeef5;overflow: hidden;position: relative;vertical-align: middle;}
+            .panlinker-progress-inner{ position: absolute;left: 0;top: 0;background-color: #409eff;text-align: right;border-radius: 100px;line-height: 1;white-space: nowrap;transition: width .6s ease;}
+            .panlinker-progress-inner-text { display: inline-block;vertical-align: middle;color: #d1d1d1;font-size: 12px;margin: 0 5px;height: 15px}
+            .panlinker-progress-tip{ flex:1;text-align:right}
+            .panlinker-progress-how{ flex: 0 0 90px; background: #ddd; border-radius: 3px; margin-left: 10px; cursor: pointer; text-align: center;}
+            .panlinker-progress-stop{ flex: 0 0 50px; padding: 0 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;margin-left:10px;height:20px}
+            .panlinker-progress-inner-text:after { display: inline-block;content: "";height: 100%;vertical-align: middle;}
             .panlinker-btn-primary { background: ${color}; border: 0; border-radius: 4px; color: #ffffff; cursor: pointer; font-size: 12px; outline: none; display:flex; align-items: center; justify-content: center; margin: 2px 0; padding: 6px 0;transition: 0.3s opacity; }
             .panlinker-btn-info { background: #606266; }
             .panlinker-btn-primary:hover { opacity: 0.9;transition: 0.3s opacity; }
@@ -259,6 +285,28 @@
         },
 
         addPageListener() {
+            function _factory(e) {
+                let target = $(e.target);
+                let item = target.parents('.panlinker-item');
+                let link = item.find('.panlinker-item-link');
+                let progress = item.find('.panlinker-item-progress');
+                let tip = item.find('.panlinker-item-tip');
+                return {
+                    item, link, progress, tip, target,
+                };
+            };
+
+            function _reset(i) {
+                if (ins[i]) {
+                    clearInterval(ins[i]);
+                }
+                if (request[i]) {
+                    request[i].abort()
+                }
+                progress[i] = 0;
+                idm[i] = false;
+            }
+
             doc.on('click', '#panlinker-button', () => {
                 $('#panlinker-button').addClass('button-open');
             });
@@ -270,23 +318,83 @@
                 mode = e.target.dataset.mode;
                 this.getPCSLink();
             });
-            doc.on('click', '.panlistener-link-api', (e) => {
+            doc.on('click', '.listener-link-api', async (e) => {
                 e.preventDefault();
-                $(e.target).animate({opacity: '0.5'}, "slow");
-                util.get(e.target.dataset.link, {"User-Agent": pan.ua}, 'blob', {filename: e.target.dataset.filename});
+                let o = _factory(e);
+                let $width = o.item.find('.panlinker-progress-inner');
+                let $text = o.item.find('.panlinker-progress-inner-text');
+                let filename = o.link[0].dataset.filename;
+                let index = o.link[0].dataset.index;
+                _reset(index)
+                util.get(o.link[0].dataset.link, {"User-Agent": pan.ua}, 'blob', {filename, index});
+                ins[index] = setInterval(() => {
+                    let prog = progress[index] || 0;
+                    let isIDM = idm[index] || false;
+                    if (isIDM) { //检测到IDM
+                        o.tip.hide();
+                        o.progress.hide();
+                        o.link.text('已成功唤起IDM，请查看IDM下载框！').animate({opacity: '0.5'}, "slow").show();
+                        clearInterval(ins[index]);
+                        idm[index] = false;
+                    } else {
+                        o.link.hide();
+                        o.tip.hide();
+                        o.progress.show();
+                        $width.css('width', prog + '%');
+                        $text.text(prog + '%');
+                        if (prog == 100) {
+                            clearInterval(ins[index]);
+                            progress[index] = 0;
+                            o.item.find('.panlinker-progress-stop').hide();
+                            o.item.find('.panlinker-progress-tip').html('下载完成，正在弹出浏览器下载框！');
+                        }
+                    }
+                }, 500);
             });
-            doc.on('click', '.panlistener-link-aria, .panlistener-copy-aria', (e) => {
+            doc.on('click', '.listener-retry', async (e) => {
+                let o = _factory(e);
+                o.tip.hide();
+                o.link.show();
+            });
+            doc.on('click', '.listener-how', async (e) => {
+                let o = _factory(e);
+                let index = o.link[0].dataset.index;
+                if (request[index]) {
+                    request[index].abort();
+                    clearInterval(ins[index]);
+                    o.progress.hide();
+                    o.tip.show();
+                }
+
+            });
+            doc.on('click', '.listener-stop', async (e) => {
+                let o = _factory(e);
+                let index = o.link[0].dataset.index;
+                if (request[index]) {
+                    request[index].abort();
+                    clearInterval(ins[index]);
+                    o.tip.hide(200);
+                    o.progress.hide(200);
+                    o.link.show(200);
+                }
+            });
+            doc.on('click', '.listener-back', async (e) => {
+                let o = _factory(e);
+                o.tip.hide();
+                o.link.show();
+            });
+            doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
                 e.preventDefault();
                 if (e.target.dataset.link === '') {
-                    $(e.target).removeClass('panlistener-copy-aria').addClass('panlinker-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
+                    $(e.target).removeClass('listener-copy-aria').addClass('panlinker-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
                 } else {
-                    GM_setClipboard(decodeURIComponent(e.target.dataset.link), 'text');
+                    util.setClipboard(decodeURIComponent(e.target.dataset.link));
                     $(e.target).text('复制成功，快去粘贴吧！').animate({opacity: '0.5'}, "slow");
                 }
             });
-            doc.on('click', '.panlistener-link-rpc', async (e) => {
+            doc.on('click', '.listener-link-rpc', async (e) => {
                 let res = await this.sendLinkToRPC(e.target.dataset.filename, e.target.dataset.link);
-                let target = $(e.target).parents('.panlinker-item').find('.panlistener-link-rpc');
+                let target = $(e.target).parents('.panlinker-item').find('.listener-link-rpc');
                 if (res === 'success') {
                     target.removeClass('panlinker-btn-danger').text('发送成功，快去看看吧！').animate({opacity: '0.5'}, "slow");
                 } else if (res === 'assistant') {
@@ -295,11 +403,11 @@
                     target.addClass('panlinker-btn-danger').text('发送失败，请检查您的RPC配置信息！').animate({opacity: '0.5'}, "slow");
                 }
             });
-            doc.on('click', '.panlistener-send-rpc', (e) => {
-                $('.panlistener-link-rpc').click();
+            doc.on('click', '.listener-send-rpc', (e) => {
+                $('.listener-link-rpc').click();
                 $(e.target).text('发送完成，发送结果见上方按钮！').animate({opacity: '0.5'}, "slow");
             });
-            doc.on('click', '.panlistener-config-rpc', (e) => {
+            doc.on('click', '.listener-config-rpc', (e) => {
                 this.showSetting();
             });
         },
@@ -308,13 +416,14 @@
          * 添加按钮
          */
         addButton() {
+            if ($('#panlinker-button').length > 0) return;
             this._initVariable();
             pageType = this._detectPage();
             if (pageType !== 'home' && pageType !== 'share') return;
             let $toolWrap;
             pageType === 'home' ? $toolWrap = $('.tcuLAu') : $toolWrap = $('.module-share-top-bar .x-button-box');
-            let $button = $(`<span class="g-dropdown-button pointer" id="panlinker-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a>${pan.code === 200 ? pan.new : ''}</span></span>`);
-            $toolWrap.append($button);
+            let $button = $(`<span class="g-dropdown-button pointer" id="panlinker-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a>${pan.code === 200 && version < pan.version ? pan.new : ''}</span></span>`);
+            $toolWrap.prepend($button);
 
             this.addPageListener();
         },
@@ -350,11 +459,11 @@
                 formData.append('fid_list', fid_list);
                 params.shareType == 'secret' ? formData.append('extra', params.extra) : '';
                 url = `${pan.pcs[1]}&sign=${params.sign}&timestamp=${params.timestamp}&logid=${logid}`;
-                res = await util.post(url, formData);
+                res = await util.post(url, formData, {"User-Agent": pan.ua});
             }
             if (res.errno === 0) {
                 let html = this.generateDom(res.list);
-                this.showDialog(pan[mode][0], html, pan[mode][1]);
+                this.showMainDialog(pan[mode][0], html, pan[mode][1]);
             } else if (res.errno === 112) {
                 return util.message.error('提示：页面过期，请刷新重试！');
             } else {
@@ -370,14 +479,27 @@
         generateDom(list) {
             let content = '<div class="panlinker-main">';
             let alinkAllText = '';
-            list.forEach((v) => {
+            list.forEach((v, i) => {
                 if (v.isdir === 1) return;
                 let filename = v.server_filename || v.filename;
+                let ext = util.getExtension(filename);
                 let dlink = v.dlink;
                 if (mode === 'api') {
                     content += `<div class="panlinker-item">
                                 <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <a class="panlinker-item-link panlistener-link-api" href="${dlink}" data-filename="${filename}" data-link="${dlink}">${dlink}</a> </div>`;
+                                <a class="panlinker-item-link listener-link-api" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}" >${dlink}</a>
+                                <div class="panlinker-item-tip" style="display: none"><span>若没有弹出IDM下载框，找到IDM <b>选项</b> -> <b>文件类型</b> -> <b>第一个框</b> 中添加后缀 <span class="panlinker-ext">${ext}</span>，<a href="https://www.baiduyun.wiki/zh-cn/idm.html" target="_blank">详见此处</a></span> <span class="panlinker-back listener-back">返回</span></div>
+                                <div class="panlinker-item-progress" style="display: none">
+                                    <div class="panlinker-progress">
+                                        <div class="panlinker-progress-outer"></div>
+                                        <div class="panlinker-progress-inner" style="width:5%">
+                                          <div class="panlinker-progress-inner-text">0%</div>
+                                        </div>
+                                    </div>
+                                    <span class="panlinker-progress-stop listener-stop">取消下载</span>
+                                    <span class="panlinker-progress-tip">未发现IDM，使用自带浏览器下载</span>
+                                    <span class="panlinker-progress-how listener-how">如何唤起IDM？</span>
+                                </div></div>`;
                 }
                 if (mode === 'aria') {
                     let alink = util.convertToAria(dlink, filename, pan.ua);
@@ -389,20 +511,20 @@
                         alinkAllText += alink + '\r\n';
                         content += `<div class="panlinker-item">
                                 <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <a class="panlinker-item-link panlistener-link-aria" href="${alink}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
+                                <a class="panlinker-item-link listener-link-aria" href="${alink}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
                     }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="panlinker-item">
                                 <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <button class="panlinker-item-link panlistener-link-rpc panlinker-btn-primary panlinker-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
+                                <button class="panlinker-item-link listener-link-rpc panlinker-btn-primary panlinker-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
                 }
             });
             content += '</div>';
             if (mode === 'aria')
-                content += `<div class="panlinker-extra"><button class="panlinker-btn-primary panlistener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
+                content += `<div class="panlinker-extra"><button class="panlinker-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
             if (mode === 'rpc')
-                content += '<div class="panlinker-extra"><button class="panlinker-btn-primary  panlistener-send-rpc">发送全部链接</button><button class="panlinker-btn-primary panlistener-config-rpc" style="margin-left: 10px;">配置RPC服务</button></div>';
+                content += '<div class="panlinker-extra"><button class="panlinker-btn-primary  listener-send-rpc">发送全部链接</button><button class="panlinker-btn-primary listener-config-rpc" style="margin-left: 10px;">配置RPC服务</button></div>';
             return content;
         },
 
@@ -485,6 +607,7 @@
             let u = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/~！@#￥%……&";
             let d = /[\uD800-\uDBFF][\uDC00-\uDFFFF]|[^\x00-\x7F]/g;
             let f = String.fromCharCode;
+
             function l(e) {
                 if (e.length < 2) {
                     let n = e.charCodeAt(0);
@@ -493,26 +616,32 @@
                 let n = 65536 + 1024 * (e.charCodeAt(0) - 55296) + (e.charCodeAt(1) - 56320);
                 return f(240 | n >>> 18 & 7) + f(128 | n >>> 12 & 63) + f(128 | n >>> 6 & 63) + f(128 | 63 & n);
             }
+
             function g(e) {
                 return (e + "" + Math.random()).replace(d, l);
             }
+
             function m(e) {
                 let n = [0, 2, 1][e.length % 3];
                 let t = e.charCodeAt(0) << 16 | (e.length > 1 ? e.charCodeAt(1) : 0) << 8 | (e.length > 2 ? e.charCodeAt(2) : 0);
                 let o = [u.charAt(t >>> 18), u.charAt(t >>> 12 & 63), n >= 2 ? "=" : u.charAt(t >>> 6 & 63), n >= 1 ? "=" : u.charAt(63 & t)];
                 return o.join("");
             }
+
             function h(e) {
                 return e.replace(/[\s\S]{1,3}/g, m);
             }
+
             function p() {
                 return h(g((new Date()).getTime()));
             }
+
             function w(e, n) {
                 return n ? p(String(e)).replace(/[+\/]/g, (e) => {
                     return "+" == e ? "-" : "_";
                 }).replace(/=/g, "") : p(String(e));
             }
+
             return w(util.getCookie(name));
         },
 
@@ -537,8 +666,17 @@
             });
             return '[' + fidlist + ']';
         },
+        _resetData() {
+            progress = {};
+            request = {};
+            $.each(ins, (key) => {
+                clearInterval(ins[key]);
+            });
+            idm = {};
+            ins = {};
+        },
 
-        showDialog(title, html, footer) {
+        showMainDialog(title, html, footer) {
             Swal.fire({
                 title,
                 html,
@@ -621,14 +759,15 @@
         },
 
         showSetting() {
-            let dom = '', btn = '', colorList = ['#09AAFF', '#cc3235', '#574ab8', '#518c17', '#ed944b', '#f969a5', '#bca280'];
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC主机</div><input type="text"  placeholder="主机地址，需带上http(s)://" class="panlinker-input panlistener-domain" value="${util.getValue('setting_rpc_domain')}"></label>`;
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC端口</div><input type="text" placeholder="端口号，例如：Motrix为16800" class="panlinker-input panlistener-port" value="${util.getValue('setting_rpc_port')}"></label>`;
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC密钥</div><input type="text" placeholder="无密钥无需填写" class="panlinker-input panlistener-token" value="${util.getValue('setting_rpc_token')}"></label>`;
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="panlinker-input panlistener-dir" value="${util.getValue('setting_rpc_dir')}"></label>`;
+            let dom = '', btn = '',
+                colorList = ['#09AAFF', '#cc3235', '#574ab8', '#518c17', '#ed944b', '#f969a5', '#bca280'];
+            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC主机</div><input type="text"  placeholder="主机地址，需带上http(s)://" class="panlinker-input listener-domain" value="${util.getValue('setting_rpc_domain')}"></label>`;
+            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC端口</div><input type="text" placeholder="端口号，例如：Motrix为16800" class="panlinker-input listener-port" value="${util.getValue('setting_rpc_port')}"></label>`;
+            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC密钥</div><input type="text" placeholder="无密钥无需填写" class="panlinker-input listener-token" value="${util.getValue('setting_rpc_token')}"></label>`;
+            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="panlinker-input listener-dir" value="${util.getValue('setting_rpc_dir')}"></label>`;
 
             colorList.forEach((v) => {
-                btn += `<div data-color="${v}" style="background: ${v};width: 35px;height: 35px;margin:0 10 10 0" class="pointer panlistener-color"></div>`;
+                btn += `<div data-color="${v}" style="background: ${v};width: 35px;height: 35px;margin:0 10px 10px 0" class="pointer listener-color"></div>`;
             });
             dom += `<label class="panlinker-setting-label"><div class="panlinker-label">主题颜色</div> <div style="flex: 1;display: flex;flex-wrap: wrap;
                  margin-right: -10px;">${btn}<div></label>`;
@@ -643,21 +782,21 @@
                 footer: pan.footer,
             });
 
-            doc.on('click', '.panlistener-color', async (e) => {
+            doc.on('click', '.listener-color', async (e) => {
                 util.setValue('setting_theme_color', e.target.dataset.color);
                 util.message.success('设置成功！');
                 history.go(0);
             });
-            doc.on('input', '.panlistener-domain', async (e) => {
+            doc.on('input', '.listener-domain', async (e) => {
                 util.setValue('setting_rpc_domain', e.target.value);
             });
-            doc.on('input', '.panlistener-port', async (e) => {
+            doc.on('input', '.listener-port', async (e) => {
                 util.setValue('setting_rpc_port', e.target.value);
             });
-            doc.on('input', '.panlistener-token', async (e) => {
+            doc.on('input', '.listener-token', async (e) => {
                 util.setValue('setting_rpc_token', e.target.value);
             });
-            doc.on('input', '.panlistener-dir', async (e) => {
+            doc.on('input', '.listener-dir', async (e) => {
                 util.setValue('setting_rpc_dir', e.target.value);
             });
         },
