@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.0.1
+// @version           5.0.3
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
@@ -9,8 +9,8 @@
 // @license           AGPL
 // @homepage          https://www.baiduyun.wiki
 // @supportURL        https://github.com/syhyz1990/baiduyun
-// @updateURL         https://www.baiduyun.wiki/panlinker.user.js
-// @downloadURL       https://www.baiduyun.wiki/panlinker.user.js
+// @updateURL         https://www.baiduyun.wiki/baiduyun.user.js
+// @downloadURL       https://www.baiduyun.wiki/baiduyun.user.js
 // @match             *://pan.baidu.com/disk/home*
 // @match             *://yun.baidu.com/disk/home*
 // @match             *://pan.baidu.com/s/*
@@ -40,11 +40,31 @@
 (function () {
     'use strict';
 
-    let pageType = '', selectFile = [], params = {}, yunData = {}, mode = '', width = 800, pan = {}, color = '',
-        doc = $(document), progress = {}, request = {}, ins = {}, idm = {};
+    let pageType = '', selectFile = [], params = {}, mode = '', width = 800, pan = {}, color = '',
+      doc = $(document), progress = {}, request = {}, ins = {}, idm = {};
     const scriptInfo = GM_info.script;
     const version = scriptInfo.version;
     const author = scriptInfo.author;
+    const customClass = {
+        container: 'panlinker-container',
+        popup: 'panlinker-popup',
+        header: 'panlinker-header',
+        title: 'panlinker-title',
+        closeButton: 'panlinker-close',
+        icon: 'panlinker-icon',
+        image: 'panlinker-image',
+        content: 'panlinker-content',
+        htmlContainer: 'panlinker-html',
+        input: 'panlinker-input',
+        inputLabel: 'panlinker-inputLabel',
+        validationMessage: 'panlinker-validation',
+        actions: 'panlinker-actions',
+        confirmButton: 'panlinker-confirm',
+        denyButton: 'panlinker-deny',
+        cancelButton: 'panlinker-cancel',
+        loader: 'panlinker-loader',
+        footer: 'panlinker-footer'
+    };
 
     let toast = Swal.mixin({
         toast: true,
@@ -59,18 +79,20 @@
     });
 
     let util = {
-        clog(c1, c2, c3) {
-            c1 = c1 ? c1 : '';
-            c2 = c2 ? c2 : '';
-            c3 = c3 ? c3 : '';
+        clog(c) {
             console.group('[网盘直链下载助手]');
-            console.log(c1, c2, c3);
+            console.log(c);
             console.groupEnd();
         },
-        getCookie(e) {
-            let o, t;
-            let n = document, c = decodeURI;
-            return n.cookie.length > 0 && (o = n.cookie.indexOf(e + "="), -1 != o) ? (o = o + e.length + 1, t = n.cookie.indexOf(";", o), -1 == t && (t = n.cookie.length), c(n.cookie.substring(o, t))) : "";
+        getCookie(name) {
+            let arr = document.cookie.replace(/\s/g, "").split(';');
+            for (let i = 0, l = arr.length; i < l; i++) {
+                let tempArr = arr[i].split('=');
+                if (tempArr[0] == name) {
+                    return decodeURIComponent(tempArr[1]);
+                }
+            }
+            return '';
         },
         getValue(name) {
             return GM_getValue(name);
@@ -94,12 +116,14 @@
             return decodeURIComponent(escape(atob(str)));
         },
         setBDUSS() {
-            if (GM_cookie) {
-                GM_cookie('list', {name: 'BDUSS'}, (cookies, error) => {
+            try {
+                GM_cookie && GM_cookie('list', {name: 'BDUSS'}, (cookies, error) => {
                     if (!error) {
                         this.setStorage("baiduyunPlugin_BDUSS", JSON.stringify({BDUSS: cookies[0].value}));
                     }
                 });
+            } catch (e) {
+
             }
         },
         getBDUSS() {
@@ -127,7 +151,7 @@
                 };
             }
         },
-        creteUrlDownload(blob, filename) {
+        blobDownload(blob, filename) {
             if (blob instanceof Blob) {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -136,6 +160,11 @@
                 a.click();
                 URL.revokeObjectURL(url);
             }
+        },
+        sleep(time) {
+            new Promise((resolve) => {
+                setTimeout(resolve, time);
+            });
         },
         message: {
             success(text) {
@@ -160,11 +189,7 @@
                     method: "POST", url, headers, data,
                     responseType: type || 'json',
                     onload: (res) => {
-                        if (type === 'blob') {
-                            resolve(res);
-                        } else {
-                            resolve(res.response || res.responseText);
-                        }
+                        type === 'blob' ? resolve(res) : resolve(res.response || res.responseText);
                     },
                     onerror: (err) => {
                         reject(err);
@@ -183,9 +208,7 @@
                             idm[extra.index] = true;
                         }
                         if (type === 'blob') {
-                            if (res.status === 200) {
-                                util.creteUrlDownload(res.response, extra.filename);
-                            }
+                            res.status === 200 && util.blobDownload(res.response, extra.filename);
                             resolve(res);
                         } else {
                             resolve(res.response || res.responseText);
@@ -193,13 +216,11 @@
                     },
                     onprogress: (res) => {
                         if (extra && extra.filename && extra.index) {
-                            res.total > 0 ? progress[extra.index] = (res.loaded * 100 / res.total).toFixed(2): progress[extra.index] = 0.00
+                            res.total > 0 ? progress[extra.index] = (res.loaded * 100 / res.total).toFixed(2) : progress[extra.index] = 0.00;
                         }
                     },
                     onloadstart() {
-                        if (extra && extra.filename && extra.index) {
-                            request[extra.index] = requestObj;
-                        }
+                        extra && extra.filename && extra.index && (request[extra.index] = requestObj);
                     },
                     onerror: (err) => {
                         reject(err);
@@ -232,12 +253,13 @@
             }, {
                 name: 'setting_init_code',
                 value: ''
+            }, {
+                name: 'scode',
+                value: ''
             }];
 
             value.forEach((v) => {
-                if (util.getValue(v.name) === undefined) {
-                    util.setValue(v.name, v.value);
-                }
+                util.getValue(v.name) === undefined && util.setValue(v.name, v.value);
             });
         },
 
@@ -279,7 +301,11 @@
             .panlinker-setting-label { display: flex;align-items: center;justify-content: space-between;padding-top: 10px; }
             .panlinker-label { flex: 0 0 100px;text-align:left; }
             .panlinker-input { flex: 1; padding: 8px 10px; border: 1px solid #c2c2c2; border-radius: 5px; font-size: 14px }
+            .panlinker-color { flex: 1;display: flex;flex-wrap: wrap; margin-right: -10px;}
+            .panlinker-color-box { width: 35px;height: 35px;margin:10px 10px 0 0;; box-sizing: border-box;border:1px solid #fff;cursor:pointer }
+            .panlinker-color-box.checked { border:3px dashed #111!important }
             .panlinker-close:focus { outline: 0; box-shadow: none; }
+            .tag-danger {color:#cc3235;margin: 0 5px;}
             `);
 
         },
@@ -294,15 +320,11 @@
                 return {
                     item, link, progress, tip, target,
                 };
-            };
+            }
 
             function _reset(i) {
-                if (ins[i]) {
-                    clearInterval(ins[i]);
-                }
-                if (request[i]) {
-                    request[i].abort()
-                }
+                ins[i] && clearInterval(ins[i]);
+                request[i] && request[i].abort();
                 progress[i] = 0;
                 idm[i] = false;
             }
@@ -314,8 +336,8 @@
                 $('#panlinker-button').removeClass('button-open');
             });
             doc.on('click', '.panlinker-button-mode', (e) => {
-                Swal.showLoading();
                 mode = e.target.dataset.mode;
+                Swal.showLoading();
                 this.getPCSLink();
             });
             doc.on('click', '.listener-link-api', async (e) => {
@@ -325,7 +347,7 @@
                 let $text = o.item.find('.panlinker-progress-inner-text');
                 let filename = o.link[0].dataset.filename;
                 let index = o.link[0].dataset.index;
-                _reset(index)
+                _reset(index);
                 util.get(o.link[0].dataset.link, {"User-Agent": pan.ua}, 'blob', {filename, index});
                 ins[index] = setInterval(() => {
                     let prog = progress[index] || 0;
@@ -373,9 +395,9 @@
                 if (request[index]) {
                     request[index].abort();
                     clearInterval(ins[index]);
-                    o.tip.hide(200);
-                    o.progress.hide(200);
-                    o.link.show(200);
+                    o.tip.hide();
+                    o.progress.hide();
+                    o.link.show(0);
                 }
             });
             doc.on('click', '.listener-back', async (e) => {
@@ -385,7 +407,7 @@
             });
             doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
                 e.preventDefault();
-                if (e.target.dataset.link === '') {
+                if (!e.target.dataset.link) {
                     $(e.target).removeClass('listener-copy-aria').addClass('panlinker-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
                 } else {
                     util.setClipboard(decodeURIComponent(e.target.dataset.link));
@@ -417,14 +439,14 @@
          */
         addButton() {
             if ($('#panlinker-button').length > 0) return;
-            this._initVariable();
             pageType = this._detectPage();
             if (pageType !== 'home' && pageType !== 'share') return;
             let $toolWrap;
-            pageType === 'home' ? $toolWrap = $('.tcuLAu') : $toolWrap = $('.module-share-top-bar .x-button-box');
+            pageType === 'home' ? $toolWrap = $(pan.btn.home) : $toolWrap = $(pan.btn.share);
             let $button = $(`<span class="g-dropdown-button pointer" id="panlinker-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a>${pan.code === 200 && version < pan.version ? pan.new : ''}</span></span>`);
             $toolWrap.prepend($button);
 
+            util.setBDUSS();
             this.addPageListener();
         },
 
@@ -444,21 +466,36 @@
                 res = await util.get(url, {"User-Agent": pan.ua});
             }
             if (pageType === 'share') {
-                if (!params.bdstoken) {
-                    return util.message.error('提示：登录网盘后才能使用此功能哦！');
-                }
+                this.initParams();
                 if (selectFile.length === 0) {
                     return util.message.error('提示：请先勾选要下载的文件！');
                 }
-                let logid = this._getLogID();
+                if (!params.sign) {
+                    let res = await Swal.fire({
+                        toast: true,
+                        icon: 'info',
+                        title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉在<span class="tag-danger">[我的网盘]</span>中下载！`,
+                        showConfirmButton: true,
+                        confirmButtonText: '点击保存',
+                        position: 'top',
+                    });
+                    if (res.isConfirmed) {
+                        $('.tools-share-save-hb')[0].click();
+                    }
+                    return;
+                }
+                if (!params.bdstoken) {
+                    return util.message.error('提示：登录网盘后才能使用此功能哦！');
+                }
                 let formData = new FormData();
                 formData.append('encrypt', params.encrypt);
                 formData.append('product', params.product);
                 formData.append('uk', params.uk);
                 formData.append('primaryid', params.primaryid);
                 formData.append('fid_list', fid_list);
+                formData.append('logid', params.logid);
                 params.shareType == 'secret' ? formData.append('extra', params.extra) : '';
-                url = `${pan.pcs[1]}&sign=${params.sign}&timestamp=${params.timestamp}&logid=${logid}`;
+                url = `${pan.pcs[1]}&sign=${params.sign}&timestamp=${params.timestamp}`;
                 res = await util.post(url, formData, {"User-Agent": pan.ua});
             }
             if (res.errno === 0) {
@@ -566,6 +603,28 @@
             return require('system-core:context/context.js').instanceForSystem.list.getSelected();
         },
 
+        getLogid() {
+            let ut = require("system-core:context/context.js").instanceForSystem.tools.baseService;
+            return ut.base64Encode(util.getCookie("BAIDUID"));
+        },
+
+        initParams() {
+            params.shareType = 'secret';
+            params.sign = this._getLocals('sign');
+            params.timestamp = this._getLocals('timestamp');
+            params.bdstoken = this._getLocals('bdstoken');
+            params.channel = 'chunlei';
+            params.clienttype = 0;
+            params.web = 1;
+            params.app_id = 250528;
+            params.encrypt = 0;
+            params.product = 'share';
+            params.logid = this.getLogid();
+            params.primaryid = this._getLocals('shareid');
+            params.uk = this._getLocals('share_uk');
+            params.shareType === 'secret' && (params.extra = this._getExtra());
+        },
+
         _detectPage() {
             let regx = /[\/].+[\/]/g;
             let page = location.pathname.match(regx);
@@ -575,82 +634,12 @@
             return '';
         },
 
-        /**
-         * 初始化变量
-         */
-        _initVariable() {
-            util.setBDUSS();
-            yunData = unsafeWindow.yunData;
-            params.shareType = this._getShareType();
-            params.sign = yunData.SIGN;
-            params.timestamp = yunData.TIMESTAMP;
-            params.bdstoken = yunData.MYBDSTOKEN;
-            params.channel = 'chunlei';
-            params.clienttype = 0;
-            params.web = 1;
-            params.app_id = 250528;
-            params.logid = this._getLogID();
-            params.encrypt = 0;
-            params.product = 'share';
-            params.primaryid = yunData.SHARE_ID;
-            params.uk = yunData.SHARE_UK;
-            if (params.shareType === 'secret') {
-                params.extra = this._getExtra();
+        _getLocals(val) {
+            try {
+                return locals.get(val);
+            } catch {
+                return '';
             }
-            if (!this._isSingleShare()) {
-                params.shareid = yunData.SHARE_ID;
-            }
-        },
-
-        _getLogID() {
-            let name = "BAIDUID";
-            let u = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/~！@#￥%……&";
-            let d = /[\uD800-\uDBFF][\uDC00-\uDFFFF]|[^\x00-\x7F]/g;
-            let f = String.fromCharCode;
-
-            function l(e) {
-                if (e.length < 2) {
-                    let n = e.charCodeAt(0);
-                    return 128 > n ? e : 2048 > n ? f(192 | n >>> 6) + f(128 | 63 & n) : f(224 | n >>> 12 & 15) + f(128 | n >>> 6 & 63) + f(128 | 63 & n);
-                }
-                let n = 65536 + 1024 * (e.charCodeAt(0) - 55296) + (e.charCodeAt(1) - 56320);
-                return f(240 | n >>> 18 & 7) + f(128 | n >>> 12 & 63) + f(128 | n >>> 6 & 63) + f(128 | 63 & n);
-            }
-
-            function g(e) {
-                return (e + "" + Math.random()).replace(d, l);
-            }
-
-            function m(e) {
-                let n = [0, 2, 1][e.length % 3];
-                let t = e.charCodeAt(0) << 16 | (e.length > 1 ? e.charCodeAt(1) : 0) << 8 | (e.length > 2 ? e.charCodeAt(2) : 0);
-                let o = [u.charAt(t >>> 18), u.charAt(t >>> 12 & 63), n >= 2 ? "=" : u.charAt(t >>> 6 & 63), n >= 1 ? "=" : u.charAt(63 & t)];
-                return o.join("");
-            }
-
-            function h(e) {
-                return e.replace(/[\s\S]{1,3}/g, m);
-            }
-
-            function p() {
-                return h(g((new Date()).getTime()));
-            }
-
-            function w(e, n) {
-                return n ? p(String(e)).replace(/[+\/]/g, (e) => {
-                    return "+" == e ? "-" : "_";
-                }).replace(/=/g, "") : p(String(e));
-            }
-
-            return w(util.getCookie(name));
-        },
-
-        _getShareType() {
-            return yunData.SHARE_PUBLIC === 1 ? 'public' : 'secret';
-        },
-
-        _isSingleShare() {
-            return yunData.SHAREPAGETYPE === "single_file_page";
         },
 
         _getExtra() {
@@ -668,12 +657,15 @@
         },
         _resetData() {
             progress = {};
-            request = {};
+            $.each(request, (key) => {
+                (request[key]).abort();
+            });
             $.each(ins, (key) => {
                 clearInterval(ins[key]);
             });
             idm = {};
             ins = {};
+            request = {};
         },
 
         showMainDialog(title, html, footer) {
@@ -685,41 +677,28 @@
                 showCloseButton: true,
                 showConfirmButton: false,
                 position: 'top',
-                width: 800,
+                width,
                 padding: '15px 20px 5px',
-                customClass: {
-                    container: 'panlinker-container',
-                    popup: 'panlinker-popup',
-                    header: 'panlinker-header',
-                    title: 'panlinker-title',
-                    closeButton: 'panlinker-close',
-                    icon: 'panlinker-icon',
-                    image: 'panlinker-image',
-                    content: 'panlinker-content',
-                    htmlContainer: 'panlinker-html',
-                    input: 'panlinker-input',
-                    inputLabel: 'panlinker-inputLabel',
-                    validationMessage: 'panlinker-validation',
-                    actions: 'panlinker-actions',
-                    confirmButton: 'panlinker-confirm',
-                    denyButton: 'panlinker-deny',
-                    cancelButton: 'panlinker-cancel',
-                    loader: 'panlinker-loader',
-                    footer: 'panlinker-footer'
-                },
+                customClass,
+            }).then(() => {
+                this._resetData();
             });
         },
 
         async getPanLinker() {
+            let start = performance.now();
             let res = await util.post
             (`https://api.baiduyun.wiki/upgrade?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(util.decode(res));
             await this._initDialog();
-            util.clog('下载助手加载成功！当前版本：', version);
+            let end = performance.now();
+            let time = (end - start).toFixed(2);
+            util.clog(`助手加载成功！版本：${version} 耗时：${time}毫秒`);
+            Object.freeze && Object.freeze(pan);
         },
 
         async _initDialog() {
-            if (pan.num === util.getValue('setting_init_code')) {
+            if (pan.num === util.getValue('setting_init_code') || pan.num === util.getValue('scode')) {
                 this.addButton();
             } else {
                 let result = await Swal.fire({
@@ -753,24 +732,23 @@
                 this.showSetting();
             });
 
-            GM_registerMenuCommand(`当前版本：v${version}`, () => {
+            GM_registerMenuCommand(`检查更新：v${version}`, () => {
                 GM_openInTab('https://www.baiduyun.wiki/install.html', {active: true});
             });
         },
 
         showSetting() {
             let dom = '', btn = '',
-                colorList = ['#09AAFF', '#cc3235', '#574ab8', '#518c17', '#ed944b', '#f969a5', '#bca280'];
+              colorList = ['#09AAFF', '#cc3235', '#574ab8', '#518c17', '#ed944b', '#f969a5', '#bca280'];
             dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC主机</div><input type="text"  placeholder="主机地址，需带上http(s)://" class="panlinker-input listener-domain" value="${util.getValue('setting_rpc_domain')}"></label>`;
             dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC端口</div><input type="text" placeholder="端口号，例如：Motrix为16800" class="panlinker-input listener-port" value="${util.getValue('setting_rpc_port')}"></label>`;
             dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC密钥</div><input type="text" placeholder="无密钥无需填写" class="panlinker-input listener-token" value="${util.getValue('setting_rpc_token')}"></label>`;
             dom += `<label class="panlinker-setting-label"><div class="panlinker-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="panlinker-input listener-dir" value="${util.getValue('setting_rpc_dir')}"></label>`;
 
             colorList.forEach((v) => {
-                btn += `<div data-color="${v}" style="background: ${v};width: 35px;height: 35px;margin:0 10px 10px 0" class="pointer listener-color"></div>`;
+                btn += `<div data-color="${v}" style="background: ${v};border: 1px solid ${v}" class="panlinker-color-box listener-color ${v == util.getValue('setting_theme_color') ? 'checked' : ''}"></div>`;
             });
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">主题颜色</div> <div style="flex: 1;display: flex;flex-wrap: wrap;
-                 margin-right: -10px;">${btn}<div></label>`;
+            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">主题颜色</div> <div class="panlinker-color">${btn}<div></label>`;
             dom = '<div>' + dom + '</div>';
 
             Swal.fire({
