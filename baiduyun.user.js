@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.0.3
+// @version           5.1.4
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
@@ -18,15 +18,14 @@
 // @match             *://pan.baidu.com/share/*
 // @match             *://yun.baidu.com/share/*
 // @require           https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js
-// @require           https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.all.min.js
+// @require           https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
 // @connect           baidu.com
 // @connect           baidupcs.com
 // @connect           baiduyun.wiki
 // @connect           localhost
 // @connect           *
-// @run-at            document-idle
+// @run-at            document-body
 // @grant             unsafeWindow
-// @grant             GM_addStyle
 // @grant             GM_xmlhttpRequest
 // @grant             GM_setClipboard
 // @grant             GM_setValue
@@ -41,36 +40,37 @@
     'use strict';
 
     let pageType = '', selectFile = [], params = {}, mode = '', width = 800, pan = {}, color = '',
-      doc = $(document), progress = {}, request = {}, ins = {}, idm = {};
+        doc = $(document), progress = {}, request = {}, ins = {}, idm = {}, start = '', end = '';
     const scriptInfo = GM_info.script;
     const version = scriptInfo.version;
     const author = scriptInfo.author;
+    const name = scriptInfo.name;
     const customClass = {
-        container: 'panlinker-container',
-        popup: 'panlinker-popup',
-        header: 'panlinker-header',
-        title: 'panlinker-title',
-        closeButton: 'panlinker-close',
-        icon: 'panlinker-icon',
-        image: 'panlinker-image',
-        content: 'panlinker-content',
-        htmlContainer: 'panlinker-html',
-        input: 'panlinker-input',
-        inputLabel: 'panlinker-inputLabel',
-        validationMessage: 'panlinker-validation',
-        actions: 'panlinker-actions',
-        confirmButton: 'panlinker-confirm',
-        denyButton: 'panlinker-deny',
-        cancelButton: 'panlinker-cancel',
-        loader: 'panlinker-loader',
-        footer: 'panlinker-footer'
+        container: 'pl-container',
+        popup: 'pl-popup',
+        header: 'pl-header',
+        title: 'pl-title',
+        closeButton: 'pl-close',
+        icon: 'pl-icon',
+        image: 'pl-image',
+        content: 'pl-content',
+        htmlContainer: 'pl-html',
+        input: 'pl-input',
+        inputLabel: 'pl-inputLabel',
+        validationMessage: 'pl-validation',
+        actions: 'pl-actions',
+        confirmButton: 'pl-confirm',
+        denyButton: 'pl-deny',
+        cancelButton: 'pl-cancel',
+        loader: 'pl-loader',
+        footer: 'pl-footer'
     };
 
     let toast = Swal.mixin({
         toast: true,
         position: 'top',
         showConfirmButton: false,
-        timer: 3000,
+        timer: 3500,
         timerProgressBar: false,
         didOpen: (toast) => {
             toast.addEventListener('mouseenter', Swal.stopTimer);
@@ -80,7 +80,7 @@
 
     let util = {
         clog(c) {
-            console.group('[网盘直链下载助手]');
+            console.group(`[${name}]`);
             console.log(c);
             console.groupEnd();
         },
@@ -161,10 +161,21 @@
                 URL.revokeObjectURL(url);
             }
         },
+        setInt(name, time) {
+            time = time || 100;
+            let i = 0;
+            if ($(name).length) return
+            let ins = setInterval(() => {
+                i++;
+                if ($(name).length) {
+                    clearInterval(ins);
+                    $(name).remove();
+                }
+                if (i > 60) clearInterval(ins);
+            }, time);
+        },
         sleep(time) {
-            new Promise((resolve) => {
-                setTimeout(resolve, time);
-            });
+            return new Promise((resolve) => setTimeout(resolve, time));
         },
         message: {
             success(text) {
@@ -227,13 +238,20 @@
                     },
                 });
             });
+        },
+        addStyle(id, tag, css) {
+            tag = tag || 'style';
+            let doc = document, styleDom = doc.getElementById(id);
+            if (styleDom) return;
+            let style = doc.createElement(tag);
+            style.rel = 'stylesheet';
+            style.id = id;
+            tag === 'style' ? style.innerHTML = css : style.href = css;
+            doc.getElementsByTagName('head')[0].appendChild(style);
         }
     };
 
     let main = {
-        /**
-         * 配置默认值
-         */
         initValue() {
             let value = [{
                 name: 'setting_rpc_domain',
@@ -265,58 +283,72 @@
 
         addStyle() {
             color = util.getValue('setting_theme_color');
-            GM_addStyle(`
-            .panlinker-popup { font-size: 12px !important; }
-            .panlinker-popup a { color: ${color} !important; }
-            .panlinker-header { padding: 0;align-items: flex-start; border-bottom: 1px solid #eee; margin: 0 0 10px; padding: 0 0 5px;}
-            .panlinker-title { font-size: 16px; line-height: 1;white-space: nowrap; text-overflow: ellipsis;}
-            .panlinker-content { padding: 0; font-size: 12px}
-            .panlinker-main { max-height: 400px;overflow-y:scroll}
-            .panlinker-footer {font-size: 12px;justify-content: flex-start; margin: 10px 0 0; padding: 5px 0 0; color: #f56c6c}
-            .panlinker-item { display: flex; align-items: center; line-height: 22px; }
-            .panlinker-item-title { flex: 0 0 150px; text-align: left;margin-right: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-            .panlinker-item-link { flex: 1; overflow: hidden;text-align: left; white-space: nowrap; text-overflow: ellipsis; }
-            .panlinker-item-tip { display: flex; justify-content: space-between;flex: 1}
-            .panlinker-back { width: 70px; background: #ddd; border-radius: 3px;cursor:pointer;margin:1px 0 }
-            .panlinker-ext { display: inline-block; width: 44px; background: #999; color: #fff; height: 16px; line-height: 16px; font-size: 12px; border-radius: 3px;}
-            .panlinker-retry {padding: 3px 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;}
-            .panlinker-browserdownload {padding: 3px 10px; background: ${color}; color: #fff; border-radius: 3px; cursor: pointer;}
-            .panlinker-item-progress { display:flex;flex: 1;align-items:center}
-            .panlinker-progress { display: inline-block;vertical-align: middle;width: 100%; box-sizing: border-box;line-height: 1;position: relative;height:15px; flex: 1}
-            .panlinker-progress-outer { height: 15px;border-radius: 100px;background-color: #ebeef5;overflow: hidden;position: relative;vertical-align: middle;}
-            .panlinker-progress-inner{ position: absolute;left: 0;top: 0;background-color: #409eff;text-align: right;border-radius: 100px;line-height: 1;white-space: nowrap;transition: width .6s ease;}
-            .panlinker-progress-inner-text { display: inline-block;vertical-align: middle;color: #d1d1d1;font-size: 12px;margin: 0 5px;height: 15px}
-            .panlinker-progress-tip{ flex:1;text-align:right}
-            .panlinker-progress-how{ flex: 0 0 90px; background: #ddd; border-radius: 3px; margin-left: 10px; cursor: pointer; text-align: center;}
-            .panlinker-progress-stop{ flex: 0 0 50px; padding: 0 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;margin-left:10px;height:20px}
-            .panlinker-progress-inner-text:after { display: inline-block;content: "";height: 100%;vertical-align: middle;}
-            .panlinker-btn-primary { background: ${color}; border: 0; border-radius: 4px; color: #ffffff; cursor: pointer; font-size: 12px; outline: none; display:flex; align-items: center; justify-content: center; margin: 2px 0; padding: 6px 0;transition: 0.3s opacity; }
-            .panlinker-btn-info { background: #606266; }
-            .panlinker-btn-primary:hover { opacity: 0.9;transition: 0.3s opacity; }
-            .panlinker-btn-danger { background: #cc3235; }
+            util.setInt('#panlinker-button');
+            let css=`
+            .pl-popup { font-size: 12px !important; }
+            .pl-popup a { color: ${color} !important; }
+            .pl-header { padding: 0!important;align-items: flex-start!important; border-bottom: 1px solid #eee!important; margin: 0 0 10px!important; padding: 0 0 5px!important;}
+            .pl-title { font-size: 16px!important; line-height: 1!important;white-space: nowrap!important; text-overflow: ellipsis!important;}
+            .pl-content { padding: 0 !important; font-size: 12px!important;}
+            .pl-main { max-height: 400px;overflow-y:scroll}
+            .pl-main::-webkit-scrollbar { width: 8px }
+            .pl-main::-webkit-scrollbar-track { background-color: #eaecef }
+            .pl-main::-webkit-scrollbar-thumb { background-color: ${color} }
+            .pl-footer {font-size: 12px!important;justify-content: flex-start!important; margin: 10px 0 0!important; padding: 5px 0 0!important; color: #f56c6c!important}
+            .pl-item { display: flex; align-items: center; line-height: 22px; }
+            .pl-item-title { flex: 0 0 150px; text-align: left;margin-right: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor:default}
+            .pl-item-link { flex: 1; overflow: hidden;text-align: left; white-space: nowrap; text-overflow: ellipsis; }
+            .pl-item-tip { display: flex; justify-content: space-between;flex: 1}
+            .pl-back { width: 70px; background: #ddd; border-radius: 3px;cursor:pointer;margin:1px 0 }
+            .pl-ext { display: inline-block; width: 44px; background: #999; color: #fff; height: 16px; line-height: 16px; font-size: 12px; border-radius: 3px;}
+            .pl-retry {padding: 3px 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;}
+            .pl-browserdownload {padding: 3px 10px; background: ${color}; color: #fff; border-radius: 3px; cursor: pointer;}
+            .pl-item-progress { display:flex;flex: 1;align-items:center}
+            .pl-progress { display: inline-block;vertical-align: middle;width: 100%; box-sizing: border-box;line-height: 1;position: relative;height:15px; flex: 1}
+            .pl-progress-outer { height: 15px;border-radius: 100px;background-color: #ebeef5;overflow: hidden;position: relative;vertical-align: middle;}
+            .pl-progress-inner{ position: absolute;left: 0;top: 0;background-color: #409eff;text-align: right;border-radius: 100px;line-height: 1;white-space: nowrap;transition: width .6s ease;}
+            .pl-progress-inner-text { display: inline-block;vertical-align: middle;color: #d1d1d1;font-size: 12px;margin: 0 5px;height: 15px}
+            .pl-progress-tip{ flex:1;text-align:right}
+            .pl-progress-how{ flex: 0 0 90px; background: #ddd; border-radius: 3px; margin-left: 10px; cursor: pointer; text-align: center;}
+            .pl-progress-stop{ flex: 0 0 50px; padding: 0 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;margin-left:10px;height:20px}
+            .pl-progress-inner-text:after { display: inline-block;content: "";height: 100%;vertical-align: middle;}
+            .pl-btn-primary { background: ${color}; border: 0; border-radius: 4px; color: #ffffff; cursor: pointer; font-size: 12px; outline: none; display:flex; align-items: center; justify-content: center; margin: 2px 0; padding: 6px 0;transition: 0.3s opacity; }
+            .pl-btn-info { background: #606266; }
+            .pl-btn-primary:hover { opacity: 0.9;transition: 0.3s opacity; }
+            .pl-btn-danger { background: #cc3235; }
+            .pl-btn-success { background: #55af28; animation: easeOpacity 1.2s 2; animation-fill-mode:forwards }
+             @keyframes easeOpacity { from { opacity: 1; } 50% { opacity: 0.35 } to { opacity: 1; } }
             .element-clicked { opacity: 0.5; }
-            .panlinker-extra { margin-top: 10px;display:flex}
-            .panlinker-extra button { flex: 1}
+            .pl-extra { margin-top: 10px;display:flex}
+            .pl-extra button { flex: 1}
             .pointer { cursor:pointer }
-            .panlinker-setting-label { display: flex;align-items: center;justify-content: space-between;padding-top: 10px; }
-            .panlinker-label { flex: 0 0 100px;text-align:left; }
-            .panlinker-input { flex: 1; padding: 8px 10px; border: 1px solid #c2c2c2; border-radius: 5px; font-size: 14px }
-            .panlinker-color { flex: 1;display: flex;flex-wrap: wrap; margin-right: -10px;}
-            .panlinker-color-box { width: 35px;height: 35px;margin:10px 10px 0 0;; box-sizing: border-box;border:1px solid #fff;cursor:pointer }
-            .panlinker-color-box.checked { border:3px dashed #111!important }
-            .panlinker-close:focus { outline: 0; box-shadow: none; }
+            .pl-setting-label { display: flex;align-items: center;justify-content: space-between;padding-top: 10px; }
+            .pl-label { flex: 0 0 100px;text-align:left; }
+            .pl-input { flex: 1; padding: 8px 10px; border: 1px solid #c2c2c2; border-radius: 5px; font-size: 14px }
+            .pl-color { flex: 1;display: flex;flex-wrap: wrap; margin-right: -10px;}
+            .pl-color-box { width: 35px;height: 35px;margin:10px 10px 0 0;; box-sizing: border-box;border:1px solid #fff;cursor:pointer }
+            .pl-color-box.checked { border:3px dashed #111!important }
+            .pl-close:focus { outline: 0; box-shadow: none; }
             .tag-danger {color:#cc3235;margin: 0 5px;}
-            `);
-
+            .pl-tooltip { position: absolute; color: #ffffff; max-width: 600px; font-size: 12px; padding: 5px 10px; background: #333; border-radius: 5px; z-index: 99999; line-height: 1.3; display:none; word-break: break-all;}
+             @keyframes load { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
+            .pl-loading-box > div > div {position: absolute;border-radius: 50%;}
+            .pl-loading-box > div > div:nth-child(1) {top: 9px;left: 9px;width: 82px;height: 82px;background: #ffffff;}
+            .pl-loading-box > div > div:nth-child(2) {top: 14px;left: 38px;width: 25px;height: 25px;background: #666666;animation: load 1s linear infinite;transform-origin: 12px 36px;}
+            .pl-loading {width: 16px;height: 16px;display: inline-block;overflow: hidden;background: none;}
+            .pl-loading-box {width: 100%;height: 100%;position: relative;transform: translateZ(0) scale(0.16);backface-visibility: hidden;transform-origin: 0 0;}
+            .pl-loading-box div { box-sizing: content-box; }
+            `
+            util.addStyle('panlinker-style','style',css)
         },
 
         addPageListener() {
             function _factory(e) {
                 let target = $(e.target);
-                let item = target.parents('.panlinker-item');
-                let link = item.find('.panlinker-item-link');
-                let progress = item.find('.panlinker-item-progress');
-                let tip = item.find('.panlinker-item-tip');
+                let item = target.parents('.pl-item');
+                let link = item.find('.pl-item-link');
+                let progress = item.find('.pl-item-progress');
+                let tip = item.find('.pl-item-tip');
                 return {
                     item, link, progress, tip, target,
                 };
@@ -329,13 +361,14 @@
                 idm[i] = false;
             }
 
-            doc.on('click', '#panlinker-button', () => {
-                $('#panlinker-button').addClass('button-open');
+            doc.on('click mouseleave', '.pl-button', (e) => {
+                if (e.type === 'click') {
+                    $(e.currentTarget).addClass('button-open');
+                } else {
+                    $(e.currentTarget).removeClass('button-open');
+                }
             });
-            doc.on('mouseleave', '#panlinker-button', () => {
-                $('#panlinker-button').removeClass('button-open');
-            });
-            doc.on('click', '.panlinker-button-mode', (e) => {
+            doc.on('click', '.pl-button-mode', (e) => {
                 mode = e.target.dataset.mode;
                 Swal.showLoading();
                 this.getPCSLink();
@@ -343,8 +376,8 @@
             doc.on('click', '.listener-link-api', async (e) => {
                 e.preventDefault();
                 let o = _factory(e);
-                let $width = o.item.find('.panlinker-progress-inner');
-                let $text = o.item.find('.panlinker-progress-inner-text');
+                let $width = o.item.find('.pl-progress-inner');
+                let $text = o.item.find('.pl-progress-inner-text');
                 let filename = o.link[0].dataset.filename;
                 let index = o.link[0].dataset.index;
                 _reset(index);
@@ -352,7 +385,7 @@
                 ins[index] = setInterval(() => {
                     let prog = progress[index] || 0;
                     let isIDM = idm[index] || false;
-                    if (isIDM) { //检测到IDM
+                    if (isIDM) {
                         o.tip.hide();
                         o.progress.hide();
                         o.link.text('已成功唤起IDM，请查看IDM下载框！').animate({opacity: '0.5'}, "slow").show();
@@ -367,8 +400,8 @@
                         if (prog == 100) {
                             clearInterval(ins[index]);
                             progress[index] = 0;
-                            o.item.find('.panlinker-progress-stop').hide();
-                            o.item.find('.panlinker-progress-tip').html('下载完成，正在弹出浏览器下载框！');
+                            o.item.find('.pl-progress-stop').hide();
+                            o.item.find('.pl-progress-tip').html('下载完成，正在弹出浏览器下载框！');
                         }
                     }
                 }, 500);
@@ -408,21 +441,25 @@
             doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
                 e.preventDefault();
                 if (!e.target.dataset.link) {
-                    $(e.target).removeClass('listener-copy-aria').addClass('panlinker-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
+                    $(e.target).removeClass('listener-copy-aria').addClass('pl-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
                 } else {
                     util.setClipboard(decodeURIComponent(e.target.dataset.link));
                     $(e.target).text('复制成功，快去粘贴吧！').animate({opacity: '0.5'}, "slow");
                 }
             });
             doc.on('click', '.listener-link-rpc', async (e) => {
-                let res = await this.sendLinkToRPC(e.target.dataset.filename, e.target.dataset.link);
-                let target = $(e.target).parents('.panlinker-item').find('.listener-link-rpc');
+                let target = $(e.currentTarget);
+                target.find('.icon').remove();
+                target.find('.pl-loading').remove();
+                target.prepend(this.createLoading());
+                let res = await this.sendLinkToRPC(e.currentTarget.dataset.filename, e.currentTarget.dataset.link);
                 if (res === 'success') {
-                    target.removeClass('panlinker-btn-danger').text('发送成功，快去看看吧！').animate({opacity: '0.5'}, "slow");
+                    $('.listener-rpc-task').show();
+                    target.removeClass('pl-btn-danger').html('发送成功，快去看看吧！').animate({opacity: '0.5'}, "slow");
                 } else if (res === 'assistant') {
-                    target.addClass('panlinker-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
+                    target.addClass('pl-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank">点击此处安装</a>👈`);
                 } else {
-                    target.addClass('panlinker-btn-danger').text('发送失败，请检查您的RPC配置信息！').animate({opacity: '0.5'}, "slow");
+                    target.addClass('pl-btn-danger').text('发送失败，请检查您的RPC配置信息！').animate({opacity: '0.5'}, "slow");
                 }
             });
             doc.on('click', '.listener-send-rpc', (e) => {
@@ -432,34 +469,61 @@
             doc.on('click', '.listener-config-rpc', (e) => {
                 this.showSetting();
             });
+            doc.on('click', '.listener-rpc-task', (e) => {
+                let rpc = JSON.stringify({
+                    domain: util.getValue('setting_rpc_domain'),
+                    port: util.getValue('setting_rpc_port'),
+                }), url = `http://d.baiduyun.wiki/?rpc=${util.encode(rpc)}#${util.getValue('setting_rpc_token')}`;
+                GM_openInTab(url, {active: true});
+            });
+            doc.on('mouseenter mouseleave', '.listener-tip', (e) => {
+                if (e.type === 'mouseenter') {
+                    let tip = e.currentTarget.innerText;
+                    $(e.currentTarget).css({opacity: '0.5'});
+                    $('.pl-tooltip').text(tip).css({
+                        'left': e.pageX + 10 + 'px',
+                        'top': e.pageY - e.currentTarget.offsetTop > 14 ? e.pageY + 'px' : e.pageY + 20 + 'px'
+                    }).show();
+                } else {
+                    $(e.currentTarget).css({opacity: '1'});
+                    $('.pl-tooltip').hide(0);
+                }
+            });
         },
 
-        /**
-         * 添加按钮
-         */
+        createTip() {
+            $('body').append('<div class="pl-tooltip"></div>');
+        },
+
+        createLoading() {
+            return $('<div class="pl-loading"><div class="pl-loading-box"><div><div></div><div></div></div></div></div>');
+        },
+
         addButton() {
-            if ($('#panlinker-button').length > 0) return;
             pageType = this._detectPage();
             if (pageType !== 'home' && pageType !== 'share') return;
+            if (($('.pl-button').length || $('.pl-button-init').length) && pan.name !== name) return;
+
             let $toolWrap;
             pageType === 'home' ? $toolWrap = $(pan.btn.home) : $toolWrap = $(pan.btn.share);
-            let $button = $(`<span class="g-dropdown-button pointer" id="panlinker-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu panlinker-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a>${pan.code === 200 && version < pan.version ? pan.new : ''}</span></span>`);
+            let $button = $(`<span class="g-dropdown-button pointer pl-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a>${pan.code === 200 && version < pan.version ? pan.new : ''}</span></span>`);
             $toolWrap.prepend($button);
-
+            end = performance.now();
+            let time = (end - start).toFixed(2);
+            util.clog(`助手加载成功！版本：${version} 耗时：${time}毫秒`);
             util.setBDUSS();
             this.addPageListener();
         },
 
-        /**
-         * 获取链接
-         * @returns {Promise<void>}
-         */
         async getPCSLink() {
             selectFile = this.getSelctedFile();
             let fid_list = this._getFidList(), url, res;
             if (pageType === 'home') {
                 if (selectFile.length === 0) {
                     return util.message.error('提示：请先勾选要下载的文件！');
+                }
+                if (fid_list.length === 2) {
+                    return util.message.error('提示：请打开文件夹后勾选文件！');
                 }
                 fid_list = encodeURIComponent(fid_list);
                 url = `${pan.pcs[0]}&fsids=${fid_list}`;
@@ -470,19 +534,31 @@
                 if (selectFile.length === 0) {
                     return util.message.error('提示：请先勾选要下载的文件！');
                 }
+                if (fid_list.length === 2) {
+                    return util.message.error('提示：请打开文件夹后勾选文件！');
+                }
                 if (!params.sign) {
-                    let res = await Swal.fire({
-                        toast: true,
-                        icon: 'info',
-                        title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉在<span class="tag-danger">[我的网盘]</span>中下载！`,
-                        showConfirmButton: true,
-                        confirmButtonText: '点击保存',
-                        position: 'top',
-                    });
-                    if (res.isConfirmed) {
-                        $('.tools-share-save-hb')[0].click();
+                    let url = `${pan.pcs[2]}&surl=${params.surl}&logid=${params.logid}`;
+                    let r = await util.get(url);
+                    if (r.errno === 0) {
+                        params.sign = r.data.sign;
+                        params.timestamp = r.data.timestamp;
+                        this._setLocals('sign', r.data.sign);
+                        this._setLocals('timestamp', r.data.timestamp);
+                    } else {
+                        let dialog = await Swal.fire({
+                            toast: true,
+                            icon: 'info',
+                            title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉在<span class="tag-danger">[我的网盘]</span>中下载！`,
+                            showConfirmButton: true,
+                            confirmButtonText: '点击保存',
+                            position: 'top',
+                        });
+                        if (dialog.isConfirmed) {
+                            $('.tools-share-save-hb')[0].click();
+                        }
+                        return;
                     }
-                    return;
                 }
                 if (!params.bdstoken) {
                     return util.message.error('提示：登录网盘后才能使用此功能哦！');
@@ -508,13 +584,8 @@
             }
         },
 
-        /**
-         * 生成Dom元素
-         * @param list
-         * @returns {string}
-         */
         generateDom(list) {
-            let content = '<div class="panlinker-main">';
+            let content = '<div class="pl-main">';
             let alinkAllText = '';
             list.forEach((v, i) => {
                 if (v.isdir === 1) return;
@@ -522,46 +593,46 @@
                 let ext = util.getExtension(filename);
                 let dlink = v.dlink;
                 if (mode === 'api') {
-                    content += `<div class="panlinker-item">
-                                <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <a class="panlinker-item-link listener-link-api" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}" >${dlink}</a>
-                                <div class="panlinker-item-tip" style="display: none"><span>若没有弹出IDM下载框，找到IDM <b>选项</b> -> <b>文件类型</b> -> <b>第一个框</b> 中添加后缀 <span class="panlinker-ext">${ext}</span>，<a href="https://www.baiduyun.wiki/zh-cn/idm.html" target="_blank">详见此处</a></span> <span class="panlinker-back listener-back">返回</span></div>
-                                <div class="panlinker-item-progress" style="display: none">
-                                    <div class="panlinker-progress">
-                                        <div class="panlinker-progress-outer"></div>
-                                        <div class="panlinker-progress-inner" style="width:5%">
-                                          <div class="panlinker-progress-inner-text">0%</div>
+                    content += `<div class="pl-item">
+                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <a class="pl-item-link listener-link-api" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}" >${dlink}</a>
+                                <div class="pl-item-tip" style="display: none"><span>若没有弹出IDM下载框，找到IDM <b>选项</b> -> <b>文件类型</b> -> <b>第一个框</b> 中添加后缀 <span class="pl-ext">${ext}</span>，<a href="https://www.baiduyun.wiki/zh-cn/idm.html" target="_blank">详见此处</a></span> <span class="pl-back listener-back">返回</span></div>
+                                <div class="pl-item-progress" style="display: none">
+                                    <div class="pl-progress">
+                                        <div class="pl-progress-outer"></div>
+                                        <div class="pl-progress-inner" style="width:5%">
+                                          <div class="pl-progress-inner-text">0%</div>
                                         </div>
                                     </div>
-                                    <span class="panlinker-progress-stop listener-stop">取消下载</span>
-                                    <span class="panlinker-progress-tip">未发现IDM，使用自带浏览器下载</span>
-                                    <span class="panlinker-progress-how listener-how">如何唤起IDM？</span>
+                                    <span class="pl-progress-stop listener-stop">取消下载</span>
+                                    <span class="pl-progress-tip">未发现IDM，使用自带浏览器下载</span>
+                                    <span class="pl-progress-how listener-how">如何唤起IDM？</span>
                                 </div></div>`;
                 }
                 if (mode === 'aria') {
                     let alink = util.convertToAria(dlink, filename, pan.ua);
                     if (typeof (alink) === 'object') {
-                        content += `<div class="panlinker-item">
-                                <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <a class="panlinker-item-link" target="_blank" href="${alink.link}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
+                        content += `<div class="pl-item">
+                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <a class="pl-item-link" target="_blank" href="${alink.link}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
                         alinkAllText += alink + '\r\n';
-                        content += `<div class="panlinker-item">
-                                <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <a class="panlinker-item-link listener-link-aria" href="${alink}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
+                        content += `<div class="pl-item">
+                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <a class="pl-item-link listener-link-aria" href="${alink}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
                     }
                 }
                 if (mode === 'rpc') {
-                    content += `<div class="panlinker-item">
-                                <div class="panlinker-item-title" title="${filename}">${filename}</div>
-                                <button class="panlinker-item-link listener-link-rpc panlinker-btn-primary panlinker-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
+                    content += `<div class="pl-item">
+                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
                 }
             });
             content += '</div>';
             if (mode === 'aria')
-                content += `<div class="panlinker-extra"><button class="panlinker-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
             if (mode === 'rpc')
-                content += '<div class="panlinker-extra"><button class="panlinker-btn-primary  listener-send-rpc">发送全部链接</button><button class="panlinker-btn-primary listener-config-rpc" style="margin-left: 10px;">配置RPC服务</button></div>';
+                content += '<div class="pl-extra"><button class="pl-btn-primary  listener-send-rpc">发送全部链接</button><button class="pl-btn-primary listener-config-rpc" style="margin-left: 10px;">配置RPC服务</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>';
             return content;
         },
 
@@ -623,6 +694,7 @@
             params.primaryid = this._getLocals('shareid');
             params.uk = this._getLocals('share_uk');
             params.shareType === 'secret' && (params.extra = this._getExtra());
+            params.surl = this._getSurl();
         },
 
         _detectPage() {
@@ -642,9 +714,25 @@
             }
         },
 
+        _setLocals(name, val) {
+            try {
+                return locals.set(name, val);
+            } catch {
+                return '';
+            }
+        },
+
         _getExtra() {
             let seKey = decodeURIComponent(util.getCookie('BDCLND'));
             return '{' + '"sekey":"' + seKey + '"' + "}";
+        },
+
+        _getSurl() {
+            let reg = /(?<=s\/|surl=)([a-zA-Z0-9_-]+)/g;
+            if (reg.test(location.href)) {
+                return location.href.match(reg)[0];
+            }
+            return '';
         },
 
         _getFidList() {
@@ -685,45 +773,38 @@
             });
         },
 
-        async getPanLinker() {
-            let start = performance.now();
+        async initPanLinker() {
+            start = performance.now();
             let res = await util.post
-            (`https://api.baiduyun.wiki/upgrade?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.baiduyun.wiki/config?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(util.decode(res));
-            await this._initDialog();
-            let end = performance.now();
-            let time = (end - start).toFixed(2);
-            util.clog(`助手加载成功！版本：${version} 耗时：${time}毫秒`);
             Object.freeze && Object.freeze(pan);
+            this.addButton()
         },
 
         async _initDialog() {
-            if (pan.num === util.getValue('setting_init_code') || pan.num === util.getValue('scode')) {
-                this.addButton();
+            let result = await Swal.fire({
+                title: pan.init[0],
+                html: `<div><img style="width: 250px;margin-bottom: 10px;" src="${pan.img}"><input class="swal2-input" id="init" type="text" placeholder="${pan.init[1]}"></div>`,
+                allowOutsideClick: false,
+                showCloseButton: true,
+                confirmButtonText: '确定'
+            });
+            if (result.isDismissed && result.dismiss === 'close') return;
+            if (pan.num === $('#init').val()) {
+                util.setValue('setting_init_code', pan.num);
+                util.message.success(pan.init[2]);
+                setTimeout(() => {
+                    history.go(0);
+                }, 1500);
             } else {
-                let result = await Swal.fire({
-                    title: pan.init[0],
-                    html: $(`<div><img style="width: 250px;margin-bottom: 10px;" src="${pan.img}"><input class="swal2-input" id="init" type="text" placeholder="${pan.init[1]}"></div>`)[0],
-                    allowOutsideClick: false,
-                    showCloseButton: true,
-                    confirmButtonText: '确定'
+                await Swal.fire({
+                    title: pan.init[3],
+                    text: pan.init[4],
+                    confirmButtonText: '重新输入',
+                    imageUrl: pan.img,
                 });
-                if (result.isDismissed && result.dismiss === 'close') return;
-                if (pan.num === $('#init').val()) {
-                    util.setValue('setting_init_code', pan.num);
-                    util.message.success(pan.init[2]);
-                    setTimeout(() => {
-                        history.go(0);
-                    }, 1500);
-                } else {
-                    await Swal.fire({
-                        title: pan.init[3],
-                        text: pan.init[4],
-                        confirmButtonText: '重新输入',
-                        imageUrl: pan.img,
-                    });
-                    this._initDialog();
-                }
+                await this._initDialog();
             }
         },
 
@@ -731,24 +812,20 @@
             GM_registerMenuCommand('设置', () => {
                 this.showSetting();
             });
-
-            GM_registerMenuCommand(`检查更新：v${version}`, () => {
-                GM_openInTab('https://www.baiduyun.wiki/install.html', {active: true});
-            });
         },
 
         showSetting() {
             let dom = '', btn = '',
-              colorList = ['#09AAFF', '#cc3235', '#574ab8', '#518c17', '#ed944b', '#f969a5', '#bca280'];
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC主机</div><input type="text"  placeholder="主机地址，需带上http(s)://" class="panlinker-input listener-domain" value="${util.getValue('setting_rpc_domain')}"></label>`;
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC端口</div><input type="text" placeholder="端口号，例如：Motrix为16800" class="panlinker-input listener-port" value="${util.getValue('setting_rpc_port')}"></label>`;
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">RPC密钥</div><input type="text" placeholder="无密钥无需填写" class="panlinker-input listener-token" value="${util.getValue('setting_rpc_token')}"></label>`;
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="panlinker-input listener-dir" value="${util.getValue('setting_rpc_dir')}"></label>`;
+                colorList = ['#09AAFF', '#cc3235', '#574ab8', '#518c17', '#ed944b', '#f969a5', '#bca280'];
+            dom += `<label class="pl-setting-label"><div class="pl-label">RPC主机</div><input type="text"  placeholder="主机地址，需带上http(s)://" class="pl-input listener-domain" value="${util.getValue('setting_rpc_domain')}"></label>`;
+            dom += `<label class="pl-setting-label"><div class="pl-label">RPC端口</div><input type="text" placeholder="端口号，例如：Motrix为16800" class="pl-input listener-port" value="${util.getValue('setting_rpc_port')}"></label>`;
+            dom += `<label class="pl-setting-label"><div class="pl-label">RPC密钥</div><input type="text" placeholder="无密钥无需填写" class="pl-input listener-token" value="${util.getValue('setting_rpc_token')}"></label>`;
+            dom += `<label class="pl-setting-label"><div class="pl-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="pl-input listener-dir" value="${util.getValue('setting_rpc_dir')}"></label>`;
 
             colorList.forEach((v) => {
-                btn += `<div data-color="${v}" style="background: ${v};border: 1px solid ${v}" class="panlinker-color-box listener-color ${v == util.getValue('setting_theme_color') ? 'checked' : ''}"></div>`;
+                btn += `<div data-color="${v}" style="background: ${v};border: 1px solid ${v}" class="pl-color-box listener-color ${v == util.getValue('setting_theme_color') ? 'checked' : ''}"></div>`;
             });
-            dom += `<label class="panlinker-setting-label"><div class="panlinker-label">主题颜色</div> <div class="panlinker-color">${btn}<div></label>`;
+            dom += `<label class="pl-setting-label"><div class="pl-label">主题颜色</div> <div class="pl-color">${btn}<div></label>`;
             dom = '<div>' + dom + '</div>';
 
             Swal.fire({
@@ -758,6 +835,9 @@
                 showCloseButton: true,
                 showConfirmButton: false,
                 footer: pan.footer,
+            }).then(() => {
+                util.message.success('设置成功！');
+                history.go(0);
             });
 
             doc.on('click', '.listener-color', async (e) => {
@@ -782,7 +862,8 @@
         init() {
             this.initValue();
             this.addStyle();
-            this.getPanLinker();
+            this.initPanLinker();
+            this.createTip();
             this.registerMenuCommand();
         }
     };
