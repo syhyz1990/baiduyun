@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.1.4
+// @version           5.1.5
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
@@ -24,7 +24,7 @@
 // @connect           baiduyun.wiki
 // @connect           localhost
 // @connect           *
-// @run-at            document-body
+// @run-at            document-idle
 // @grant             unsafeWindow
 // @grant             GM_xmlhttpRequest
 // @grant             GM_setClipboard
@@ -88,7 +88,7 @@
             let arr = document.cookie.replace(/\s/g, "").split(';');
             for (let i = 0, l = arr.length; i < l; i++) {
                 let tempArr = arr[i].split('=');
-                if (tempArr[0] == name) {
+                if (tempArr[0] === name) {
                     return decodeURIComponent(tempArr[1]);
                 }
             }
@@ -128,8 +128,7 @@
         },
         getBDUSS() {
             let baiduyunPlugin_BDUSS = this.getStorage('baiduyunPlugin_BDUSS') ? this.getStorage('baiduyunPlugin_BDUSS') : '{"baiduyunPlugin_BDUSS":""}';
-            let BDUSS = JSON.parse(baiduyunPlugin_BDUSS).BDUSS || '';
-            return BDUSS;
+            return JSON.parse(baiduyunPlugin_BDUSS).BDUSS || '';
         },
         getExtension(name) {
             let reg = /(?!\.)\w+$/;
@@ -196,7 +195,7 @@
         },
         post(url, data, headers, type) {
             return new Promise((resolve, reject) => {
-                let requestObj = GM_xmlhttpRequest({
+                GM_xmlhttpRequest({
                     method: "POST", url, headers, data,
                     responseType: type || 'json',
                     onload: (res) => {
@@ -314,6 +313,8 @@
             .pl-progress-inner-text:after { display: inline-block;content: "";height: 100%;vertical-align: middle;}
             .pl-btn-primary { background: ${color}; border: 0; border-radius: 4px; color: #ffffff; cursor: pointer; font-size: 12px; outline: none; display:flex; align-items: center; justify-content: center; margin: 2px 0; padding: 6px 0;transition: 0.3s opacity; }
             .pl-btn-info { background: #606266; }
+            .pl-button-init { opacity: 0.5; animation: easeInitOpacity 1.2s 3; animation-fill-mode:forwards }
+            @keyframes easeInitOpacity { from { opacity: 0.5; } 50% { opacity: 1 } to { opacity: 0.5; } }
             .pl-btn-primary:hover { opacity: 0.9;transition: 0.3s opacity; }
             .pl-btn-danger { background: #cc3235; }
             .pl-btn-success { background: #55af28; animation: easeOpacity 1.2s 2; animation-fill-mode:forwards }
@@ -383,7 +384,7 @@
                 _reset(index);
                 util.get(o.link[0].dataset.link, {"User-Agent": pan.ua}, 'blob', {filename, index});
                 ins[index] = setInterval(() => {
-                    let prog = progress[index] || 0;
+                    let prog = +progress[index] || 0;
                     let isIDM = idm[index] || false;
                     if (isIDM) {
                         o.tip.hide();
@@ -397,7 +398,7 @@
                         o.progress.show();
                         $width.css('width', prog + '%');
                         $text.text(prog + '%');
-                        if (prog == 100) {
+                        if (prog === 100) {
                             clearInterval(ins[index]);
                             progress[index] = 0;
                             o.item.find('.pl-progress-stop').hide();
@@ -466,10 +467,10 @@
                 $('.listener-link-rpc').click();
                 $(e.target).text('发送完成，发送结果见上方按钮！').animate({opacity: '0.5'}, "slow");
             });
-            doc.on('click', '.listener-config-rpc', (e) => {
+            doc.on('click', '.listener-config-rpc', () => {
                 this.showSetting();
             });
-            doc.on('click', '.listener-rpc-task', (e) => {
+            doc.on('click', '.listener-rpc-task', () => {
                 let rpc = JSON.stringify({
                     domain: util.getValue('setting_rpc_domain'),
                     port: util.getValue('setting_rpc_port'),
@@ -513,6 +514,21 @@
             util.clog(`助手加载成功！版本：${version} 耗时：${time}毫秒`);
             util.setBDUSS();
             this.addPageListener();
+        },
+
+        addInitButton() {
+            pageType = this._detectPage();
+            if (pageType !== 'home' && pageType !== 'share') return;
+            if ($('.pl-button-init').length && pan.name !== name) return;
+
+            let $toolWrap;
+            util.setInt('.pl-button');
+            pageType === 'home' ? $toolWrap = $(pan.btn.home) : $toolWrap = $(pan.btn.share);
+            let $button = $(`<span class="g-dropdown-button pointer pl-button-init" style="opacity:.5"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></span></a></span>`);
+            $toolWrap.prepend($button);
+            $button.click(() => {
+                this._initDialog();
+            });
         },
 
         async getPCSLink() {
@@ -570,7 +586,7 @@
                 formData.append('primaryid', params.primaryid);
                 formData.append('fid_list', fid_list);
                 formData.append('logid', params.logid);
-                params.shareType == 'secret' ? formData.append('extra', params.extra) : '';
+                params.shareType === 'secret' ? formData.append('extra', params.extra) : '';
                 url = `${pan.pcs[1]}&sign=${params.sign}&timestamp=${params.timestamp}`;
                 res = await util.post(url, formData, {"User-Agent": pan.ua});
             }
@@ -614,12 +630,12 @@
                     if (typeof (alink) === 'object') {
                         content += `<div class="pl-item">
                                 <div class="pl-item-title listener-tip">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
+                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
                         alinkAllText += alink + '\r\n';
                         content += `<div class="pl-item">
                                 <div class="pl-item-title listener-tip">${filename}</div>
-                                <a class="pl-item-link listener-link-aria" href="${alink}" alt="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
+                                <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
                     }
                 }
                 if (mode === 'rpc') {
@@ -738,7 +754,7 @@
         _getFidList() {
             let fidlist = [];
             selectFile.forEach(v => {
-                if (v.isdir == 1) return;
+                if (+v.isdir === 1) return;
                 fidlist.push(v.fs_id);
             });
             return '[' + fidlist + ']';
@@ -779,13 +795,13 @@
             (`https://api.baiduyun.wiki/config?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(util.decode(res));
             Object.freeze && Object.freeze(pan);
-            this.addButton()
+            pan.num === util.getValue('setting_init_code') || pan.num === util.getValue('scode') ? this.addButton() : this.addInitButton();
         },
 
         async _initDialog() {
             let result = await Swal.fire({
                 title: pan.init[0],
-                html: `<div><img style="width: 250px;margin-bottom: 10px;" src="${pan.img}"><input class="swal2-input" id="init" type="text" placeholder="${pan.init[1]}"></div>`,
+                html: `<div><img style="width: 250px;margin-bottom: 10px;" src="${pan.img}" alt="${pan.img}"><input class="swal2-input" id="init" type="text" placeholder="${pan.init[1]}"></div>`,
                 allowOutsideClick: false,
                 showCloseButton: true,
                 confirmButtonText: '确定'
@@ -823,7 +839,7 @@
             dom += `<label class="pl-setting-label"><div class="pl-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="pl-input listener-dir" value="${util.getValue('setting_rpc_dir')}"></label>`;
 
             colorList.forEach((v) => {
-                btn += `<div data-color="${v}" style="background: ${v};border: 1px solid ${v}" class="pl-color-box listener-color ${v == util.getValue('setting_theme_color') ? 'checked' : ''}"></div>`;
+                btn += `<div data-color="${v}" style="background: ${v};border: 1px solid ${v}" class="pl-color-box listener-color ${v === util.getValue('setting_theme_color') ? 'checked' : ''}"></div>`;
             });
             dom += `<label class="pl-setting-label"><div class="pl-label">主题颜色</div> <div class="pl-color">${btn}<div></label>`;
             dom = '<div>' + dom + '</div>';
