@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.1.5
+// @version           5.2.0
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
-// @description       【网盘直链下载助手】是一款免费开源获取网盘文件真实下载地址的油猴插件，基于开放API，支持Windows，Mac，Linux等多平台，可使用IDM，Xdown等多线程加速工具加速下载，支持RPC协议远程下载。5.0版本支持更换皮肤。
+// @description       【网盘直链下载助手】是一款免费开源获取网盘文件真实下载地址的油猴插件，基于开放API，支持 Windows，Mac，Linux 等多平台，即可使用系统自带的终端 cURL 命令，也可以使用 IDM，Xdown 等多线程工具加速下载，支持 Aria RPC 协议远程下载。支持自定义更换皮肤。
 // @license           AGPL
 // @homepage          https://www.baiduyun.wiki
 // @supportURL        https://github.com/syhyz1990/baiduyun
@@ -150,6 +150,18 @@
                 };
             }
         },
+        convertToCurl(link, filename, ua) {
+            let BDUSS = this.getBDUSS();
+            filename = filename.replace(' ', '_');
+            if (BDUSS) {
+                return encodeURIComponent(`curl -L "${link}" --output "${filename}" -A "${ua}" -b "BDUSS=${BDUSS}"`);
+            } else {
+                return {
+                    link: pan.assistant,
+                    text: pan.init[5]
+                };
+            }
+        },
         blobDownload(blob, filename) {
             if (blob instanceof Blob) {
                 const url = URL.createObjectURL(blob);
@@ -163,7 +175,7 @@
         setInt(name, time) {
             time = time || 100;
             let i = 0;
-            if ($(name).length) return
+            if ($(name).length) return;
             let ins = setInterval(() => {
                 i++;
                 if ($(name).length) {
@@ -194,6 +206,9 @@
             }
         },
         post(url, data, headers, type) {
+            if (Object.prototype.toString.call(data) === '[object Object]') {
+                data = JSON.stringify(data);
+            }
             return new Promise((resolve, reject) => {
                 GM_xmlhttpRequest({
                     method: "POST", url, headers, data,
@@ -283,16 +298,19 @@
         addStyle() {
             color = util.getValue('setting_theme_color');
             util.setInt('#panlinker-button');
-            let css=`
+            let css = `
+            body::-webkit-scrollbar { display: none }
+            ::-webkit-scrollbar { width: 6px; height: 10px }
+            ::-webkit-scrollbar-track { border-radius: 0; background: none }
+            ::-webkit-scrollbar-thumb { background-color: rgba(85,85,85,.4) }
+            ::-webkit-scrollbar-thumb,::-webkit-scrollbar-thumb:hover { border-radius: 5px; -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.2) }
+            ::-webkit-scrollbar-thumb:hover { background-color: rgba(85,85,85,.3) }
             .pl-popup { font-size: 12px !important; }
             .pl-popup a { color: ${color} !important; }
             .pl-header { padding: 0!important;align-items: flex-start!important; border-bottom: 1px solid #eee!important; margin: 0 0 10px!important; padding: 0 0 5px!important;}
             .pl-title { font-size: 16px!important; line-height: 1!important;white-space: nowrap!important; text-overflow: ellipsis!important;}
             .pl-content { padding: 0 !important; font-size: 12px!important;}
             .pl-main { max-height: 400px;overflow-y:scroll}
-            .pl-main::-webkit-scrollbar { width: 8px }
-            .pl-main::-webkit-scrollbar-track { background-color: #eaecef }
-            .pl-main::-webkit-scrollbar-thumb { background-color: ${color} }
             .pl-footer {font-size: 12px!important;justify-content: flex-start!important; margin: 10px 0 0!important; padding: 5px 0 0!important; color: #f56c6c!important}
             .pl-item { display: flex; align-items: center; line-height: 22px; }
             .pl-item-title { flex: 0 0 150px; text-align: left;margin-right: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor:default}
@@ -339,8 +357,8 @@
             .pl-loading {width: 16px;height: 16px;display: inline-block;overflow: hidden;background: none;}
             .pl-loading-box {width: 100%;height: 100%;position: relative;transform: translateZ(0) scale(0.16);backface-visibility: hidden;transform-origin: 0 0;}
             .pl-loading-box div { box-sizing: content-box; }
-            `
-            util.addStyle('panlinker-style','style',css)
+            `;
+            util.addStyle('panlinker-style', 'style', css);
         },
 
         addPageListener() {
@@ -507,7 +525,7 @@
 
             let $toolWrap;
             pageType === 'home' ? $toolWrap = $(pan.btn.home) : $toolWrap = $(pan.btn.share);
-            let $button = $(`<span class="g-dropdown-button pointer pl-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a>${pan.code === 200 && version < pan.version ? pan.new : ''}</span></span>`);
+            let $button = $(`<span class="g-dropdown-button pointer pl-button"><a style="color:#fff;background: ${color};border-color:${color}" class="g-button g-button-blue" href="javascript:;"><span class="g-button-right"><em class="icon icon-download"></em><span class="text" style="width: 60px;">下载助手</span></span></a><span class="menu" style="width:auto;z-index:41;border-color:${color}"><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="api" href="javascript:;">API下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="aria" href="javascript:;" >Aria下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="rpc" href="javascript:;">RPC下载</a><a style="color:${color}" class="g-button-menu pl-button-mode" data-mode="curl" href="javascript:;">cURL下载</a>${pan.code === 200 && version < pan.version ? pan.new : ''}</span></span>`);
             $toolWrap.prepend($button);
             end = performance.now();
             let time = (end - start).toFixed(2);
@@ -643,6 +661,19 @@
                                 <div class="pl-item-title listener-tip">${filename}</div>
                                 <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
                 }
+                if (mode === 'curl') {
+                    let alink = util.convertToCurl(dlink, filename, pan.ua);
+                    if (typeof (alink) === 'object') {
+                        content += `<div class="pl-item">
+                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
+                    } else {
+                        alinkAllText += alink + '\r\n';
+                        content += `<div class="pl-item">
+                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
+                    }
+                }
             });
             content += '</div>';
             if (mode === 'aria')
@@ -663,7 +694,7 @@
             if (!BDUSS) return 'assistant';
 
             let url = `${rpc.domain}:${rpc.port}/jsonrpc`;
-            let json_rpc = {
+            let rpcData = {
                 id: new Date().getTime(),
                 jsonrpc: '2.0',
                 method: 'aria2.addUri',
@@ -674,7 +705,7 @@
                 }]
             };
             try {
-                let res = await util.post(url, JSON.stringify(json_rpc), {"User-Agent": pan.ua}, '');
+                let res = await util.post(url, rpcData, {"User-Agent": pan.ua}, '');
                 if (res.result) return 'success';
                 return 'fail';
             } catch (e) {
@@ -792,7 +823,7 @@
         async initPanLinker() {
             start = performance.now();
             let res = await util.post
-            (`https://api.baiduyun.wiki/config?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.baiduyun.wiki/config?ver=${version}&a=${author}`, {author}, {}, 'text');
             pan = JSON.parse(util.decode(res));
             Object.freeze && Object.freeze(pan);
             pan.num === util.getValue('setting_init_code') || pan.num === util.getValue('scode') ? this.addButton() : this.addInitButton();
