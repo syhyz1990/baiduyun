@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.3.1
+// @version           5.4.1
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
@@ -9,8 +9,8 @@
 // @license           AGPL-3.0
 // @homepage          https://www.baiduyun.wiki
 // @supportURL        https://github.com/syhyz1990/baiduyun
-// @updateURL         https://www.baiduyun.wiki/baiduyun.user.js
-// @downloadURL       https://www.baiduyun.wiki/baiduyun.user.js
+// @updateURL         https://www.baiduyun.wiki/panlinker.user.js
+// @downloadURL       https://www.baiduyun.wiki/panlinker.user.js
 // @match             *://pan.baidu.com/disk/home*
 // @match             *://yun.baidu.com/disk/home*
 // @match             *://pan.baidu.com/disk/main*
@@ -132,36 +132,54 @@
             return JSON.parse(baiduyunPlugin_BDUSS).BDUSS || '';
         },
         getExtension(name) {
-            let reg = /(?!\.)\w+$/;
+            const reg = /(?!\.)\w+$/;
             if (reg.test(name)) {
                 let match = name.match(reg);
                 return match[0].toUpperCase();
             }
             return '';
         },
-        convertToAria(link, filename, ua) {
-            let BDUSS = this.getBDUSS();
-            filename = filename.replace(' ', '_');
-            if (BDUSS) {
-                return encodeURIComponent(`aria2c "${link}" --out "${filename}" --header "User-Agent: ${ua}" --header "Cookie: BDUSS=${BDUSS}"`);
-            } else {
-                return {
-                    link: pan.assistant,
-                    text: pan.init[5]
-                };
+        sizeFormat(value) {
+            if (value === +value) {
+                let unit = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+                let index = Math.floor(Math.log(value) / Math.log(1024));
+                let size = value / Math.pow(1024, index);
+                size = size.toFixed(1);
+                return size + unit[index];
             }
+            return '';
         },
-        convertToCurl(link, filename, ua) {
-            let BDUSS = this.getBDUSS();
-            filename = filename.replace(' ', '_');
-            if (BDUSS) {
-                return encodeURIComponent(`curl -L "${link}" --output "${filename}" -A "${ua}" -b "BDUSS=${BDUSS}"`);
-            } else {
-                return {
-                    link: pan.assistant,
-                    text: pan.init[5]
+        sortByName(arr) {
+            const handle = () => {
+                return  (a, b) => {
+                    const p1 = a.filename ? a.filename : a.server_filename;
+                    const p2 = b.filename ? b.filename : b.server_filename;
+                    return p1.localeCompare(p2, "zh-CN");
                 };
+            };
+            arr.sort(handle());
+        },
+        convertLinkToAria(link, filename, ua) {
+            let BDUSS = util.getBDUSS();
+            filename = filename.replace(' ', '_');
+            if (!!BDUSS) {
+                return encodeURIComponent(`aria2c "${link}" --out "${filename}" --header "User-Agent: ${ua}" --header "Cookie: BDUSS=${BDUSS}"`);
             }
+            return {
+                link: pan.assistant,
+                text: pan.init[5]
+            };
+        },
+        convertLinkToCurl(link, filename, ua) {
+            let BDUSS = util.getBDUSS();
+            filename = filename.replace(' ', '_');
+            if (!!BDUSS) {
+                return encodeURIComponent(`curl -L "${link}" --output "${filename}" -A "${ua}" -b "BDUSS=${BDUSS}"`);
+            }
+            return {
+                link: pan.assistant,
+                text: pan.init[5]
+            };
         },
         blobDownload(blob, filename) {
             if (blob instanceof Blob) {
@@ -314,7 +332,7 @@
             .pl-main { max-height: 400px;overflow-y:scroll; }
             .pl-footer {font-size: 12px!important;justify-content: flex-start!important; margin: 10px 0 0!important; padding: 5px 0 0!important; color: #f56c6c!important; }
             .pl-item { display: flex; align-items: center; line-height: 22px; }
-            .pl-item-title { flex: 0 0 150px; text-align: left;margin-right: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor:default; }
+            .pl-item-name { flex: 0 0 150px; text-align: left;margin-right: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor:default; }
             .pl-item-link { flex: 1; overflow: hidden; text-align: left; white-space: nowrap; text-overflow: ellipsis; }
             .pl-item-tip { display: flex; justify-content: space-between;flex: 1; }
             .pl-back { width: 70px; background: #ddd; border-radius: 3px; cursor:pointer; margin:1px 0; }
@@ -504,9 +522,11 @@
             });
             doc.on('mouseenter mouseleave', '.listener-tip', (e) => {
                 if (e.type === 'mouseenter') {
-                    let tip = e.currentTarget.innerText;
+                    let filename = e.currentTarget.innerText;
+                    let size = e.currentTarget.dataset.size;
+                    let tip = `${filename}<span style="margin-left: 10px;color: #f56c6c;">${size}</span>`;
                     $(e.currentTarget).css({opacity: '0.5'});
-                    $('.pl-tooltip').text(tip).css({
+                    $('.pl-tooltip').html(tip).css({
                         'left': e.pageX + 10 + 'px',
                         'top': e.pageY - e.currentTarget.offsetTop > 14 ? e.pageY + 'px' : e.pageY + 20 + 'px'
                     }).show();
@@ -534,7 +554,7 @@
             if (pt === 'home') $toolWrap = $(pan.btn.home);
             if (pt === 'main') {
                 $toolWrap = $(pan.btn.main);
-                $button = $(`<div class="pl-button" style="position: relative; display: inline-block; margin-right: 8px;"><button class="u-btn nd-file-list-toolbar-action-item u-btn--primary u-btn--default u-btn--small is-round is-has-icon"><i class="iconfont inline-block-v-middle nd-file-list-toolbar__action-item-icon icon-download"></i><span class="inline-block-v-middle nd-file-list-toolbar-action-item-text">下载助手</span></button><ul class="dropdown-list nd-common-float-menu pl-menu"  style="display: none;"><li class="sub cursor-p pl-button-mode" data-mode="api">API下载</li><li class="sub cursor-p pl-button-mode" data-mode="aria">Aria下载</li><li class="sub cursor-p pl-button-mode" data-mode="rpc">RPC下载</li><li class="sub cursor-p pl-button-mode" data-mode="curl">cURL下载</li>${pan.code == 200 && version < pan.version ? pan.newX : ''}</ul></div>`);
+                $button = $(`<div class="pl-button" style="position: relative; display: inline-block; margin-right: 8px;"><button class="u-btn nd-file-list-toolbar-action-item u-btn--primary u-btn--default u-btn--small is-round is-has-icon"  style="background: ${color};border-color: ${color}"><i class="iconfont inline-block-v-middle nd-file-list-toolbar__action-item-icon icon-download"></i><span class="inline-block-v-middle nd-file-list-toolbar-action-item-text">下载助手</span></button><ul class="dropdown-list nd-common-float-menu pl-menu"  style="display: none;"><li class="sub cursor-p pl-button-mode" data-mode="api">API下载</li><li class="sub cursor-p pl-button-mode" data-mode="aria">Aria下载</li><li class="sub cursor-p pl-button-mode" data-mode="rpc">RPC下载</li><li class="sub cursor-p pl-button-mode" data-mode="curl">cURL下载</li>${pan.code == 200 && version < pan.version ? pan.newX : ''}</ul></div>`);
             }
             if (pt === 'share') $toolWrap = $(pan.btn.share);
             $toolWrap.prepend($button);
@@ -553,7 +573,7 @@
             if (pt === 'home') $toolWrap = $(pan.btn.home);
             if (pt === 'main') {
                 $toolWrap = $(pan.btn.main);
-                $button = $(`<a href="javascript:;" class="pl-button-init" style="opacity:.5; display: inline-block; margin-right: 8px;"><button class="u-btn nd-file-list-toolbar-action-item u-btn--primary u-btn--default u-btn--small is-round is-has-icon"><i class="iconfont inline-block-v-middle nd-file-list-toolbar__action-item-icon icon-download"></i><span class="inline-block-v-middle nd-file-list-toolbar-action-item-text">下载助手</span></button></a>`);
+                $button = $(`<a href="javascript:;" class="pl-button-init" style="opacity:.5; display: inline-block; margin-right: 8px;"><button class="u-btn nd-file-list-toolbar-action-item u-btn--primary u-btn--default u-btn--small is-round is-has-icon" style="background: ${color};border-color: ${color}"><i class="iconfont inline-block-v-middle nd-file-list-toolbar__action-item-icon icon-download"></i><span class="inline-block-v-middle nd-file-list-toolbar-action-item-text">下载助手</span></button></a>`);
             }
             if (pt === 'share') $toolWrap = $(pan.btn.share);
             $toolWrap.prepend($button);
@@ -577,7 +597,7 @@
                 res = await util.get(url, {"User-Agent": pan.ua});
             }
             if (pt === 'share') {
-                this.initParams();
+                this.getShareData();
                 if (selectList.length === 0) {
                     return util.message.error('提示：请先勾选要下载的文件！');
                 }
@@ -590,8 +610,6 @@
                     if (r.errno === 0) {
                         params.sign = r.data.sign;
                         params.timestamp = r.data.timestamp;
-                        this._setLocals('sign', r.data.sign);
-                        this._setLocals('timestamp', r.data.timestamp);
                     } else {
                         let dialog = await Swal.fire({
                             toast: true,
@@ -634,15 +652,17 @@
         generateDom(list) {
             let content = '<div class="pl-main">';
             let alinkAllText = '';
+            util.sortByName(list);
             list.forEach((v, i) => {
                 if (v.isdir === 1) return;
                 let filename = v.server_filename || v.filename;
                 let ext = util.getExtension(filename);
+                let size = util.sizeFormat(v.size);
                 let dlink = v.dlink;
                 if (mode === 'api') {
                     content += `<div class="pl-item">
-                                <div class="pl-item-title listener-tip">${filename}</div>
-                                <a class="pl-item-link listener-link-api" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}" >${dlink}</a>
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
+                                <a class="pl-item-link listener-link-api" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}">${dlink}</a>
                                 <div class="pl-item-tip" style="display: none"><span>若没有弹出IDM下载框，找到IDM <b>选项</b> -> <b>文件类型</b> -> <b>第一个框</b> 中添加后缀 <span class="pl-ext">${ext}</span>，<a href="https://www.baiduyun.wiki/zh-cn/idm.html" target="_blank">详见此处</a></span> <span class="pl-back listener-back">返回</span></div>
                                 <div class="pl-item-progress" style="display: none">
                                     <div class="pl-progress">
@@ -657,33 +677,33 @@
                                 </div></div>`;
                 }
                 if (mode === 'aria') {
-                    let alink = util.convertToAria(dlink, filename, pan.ua);
+                    let alink = util.convertLinkToAria(dlink, filename, pan.ua);
                     if (typeof (alink) === 'object') {
                         content += `<div class="pl-item">
-                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
                         alinkAllText += alink + '\r\n';
                         content += `<div class="pl-item">
-                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
                     }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
-                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
                 }
                 if (mode === 'curl') {
-                    let alink = util.convertToCurl(dlink, filename, pan.ua);
+                    let alink = util.convertLinkToCurl(dlink, filename, pan.ua);
                     if (typeof (alink) === 'object') {
                         content += `<div class="pl-item">
-                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
                         alinkAllText += alink + '\r\n';
                         content += `<div class="pl-item">
-                                <div class="pl-item-title listener-tip">${filename}</div>
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
                     }
                 }
@@ -726,10 +746,6 @@
             }
         },
 
-        /**
-         * 获取选中文件列表
-         * @returns {*}
-         */
         selectedList() {
             try {
                 return require('system-core:context/context.js').instanceForSystem.list.getSelected();
@@ -743,11 +759,12 @@
             return ut.base64Encode(util.getCookie("BAIDUID"));
         },
 
-        initParams() {
+        getShareData() {
+            let res = locals.dump()
             params.shareType = 'secret';
-            params.sign = this._getLocals('sign');
-            params.timestamp = this._getLocals('timestamp');
-            params.bdstoken = this._getLocals('bdstoken');
+            params.sign = '';
+            params.timestamp = '';
+            params.bdstoken = res.bdstoken.value;
             params.channel = 'chunlei';
             params.clienttype = 0;
             params.web = 1;
@@ -755,8 +772,8 @@
             params.encrypt = 0;
             params.product = 'share';
             params.logid = this.getLogid();
-            params.primaryid = this._getLocals('shareid');
-            params.uk = this._getLocals('share_uk');
+            params.primaryid = res.shareid.value;
+            params.uk = res.share_uk.value;
             params.shareType === 'secret' && (params.extra = this._getExtra());
             params.surl = this._getSurl();
         },
@@ -767,22 +784,6 @@
             if (path === 'main') return 'main';
             if (/^\/(s|share)\//.test(path)) return 'share';
             return '';
-        },
-
-        _getLocals(val) {
-            try {
-                return locals.get(val);
-            } catch {
-                return '';
-            }
-        },
-
-        _setLocals(name, val) {
-            try {
-                return locals.set(name, val);
-            } catch {
-                return '';
-            }
         },
 
         _getExtra() {
