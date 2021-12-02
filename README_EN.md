@@ -45,19 +45,19 @@
 </div>
 
 <div align="center">
-  <strong>👉 一个免费开源的网盘下载助手 👈</strong><br>
-  <sub>适用于 Linux，macOS，Windows 平台</sub>
+  <strong>👉 A free and open source netdisk download helper 👈</strong><br>
+  <sub>Available for Linux, macOS and Windows.</sub>
 </div>
 
 [English Docs](README_EN.md) | [中文文档](README.md)
 
-👉 This script is suitable for browsers that support the installation of Tampermonkey or Violent Monkey extensions on multiple platforms, such as Chrome, 360, QQ, UC, etc.
+**[Netdisk Direct Download Helper]** is suitable for browsers that support the installation of Tampermonkey or Violent Monkey extensions on multiple platforms, such as Chrome, 360, QQ, UC, etc.
 
-Support Baidu SkyDrive PC web page to get the share link download address and my SkyDrive download address. After installation, a [Download Assistant] button will appear on the corresponding interface, which can be used with multi-threaded download tools to achieve speed-up.
+Support Baidu Netdisk and Aliyun NetDisk web page. After installation, a `Download Helper` button will appear on the corresponding interface, which can be used with multi-threaded download tools to achieve speed-up.
 
 ## 🎨 Interface
 
-![](https://i.loli.net/2020/08/18/gHYE8da6XKRJAIj.png)
+![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202111301311340.gif)
 
 ## 📖 Tutorial
 
@@ -67,17 +67,20 @@ Support Baidu SkyDrive PC web page to get the share link download address and my
 
 - [Linux](https://www.baiduyun.wiki/zh-cn/linux/)
 
-- [Android](https://www.baiduyun.wiki/zh-cn/android/)
-
 ## 💽 Install
 
 Please make sure you have installed [Tampermonkey](http://pan.baiduyun.wiki/down)
 
 - [Install](https://www.baiduyun.wiki/install.html)
 
-## ✨ Function
+## ✨ Features
 
-Get the real-chain download address of Baidu's network disk, speed up the download speed
+- ✅ Support multiple operating systems: Windows, Linux, Mac
+- ✅ Support multiple download protocols: HTTP, JSON-RPC, cURL
+- ✅ Support multiple downloaders: IDM, XDown, Aria2, NDM, Motrix, terminal
+- ✅ Support a small number of file download links to obtain Baidu Netdisk and Alibaba Cloud Disk
+- ✅ The download link can be sent to local or remote download via JSON-RPC protocol
+- ✅ Support skin replacement, automatic update, new version of the network disk interface
 
 ## 🚀 Speed
 
