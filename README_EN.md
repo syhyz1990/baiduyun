@@ -1,23 +1,53 @@
 <p align="center">
   <a href="https://www.baiduyun.wiki">
-    <img width="160" src="https://raw.githubusercontent.com/syhyz1990/baiduyun/master/logo.png" alt="Baidu Network Disk Download Assistant">
+    <img width="100" height="100" src="https://www.baiduyun.wiki/logo.png">
   </a>
 </p>
 
-<h1 align="center">Baidu Network Disk Download Assistant</h1>
+<h1 align="center">Netdisk Direct Download Helper</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tamperMonkey-v4.8-brightgreen.svg" alt="tampermonkey">
-  <img src="https://img.shields.io/badge/chrome%20x64-v76.0-brightgreen.svg" alt="chrome">
-  <img src="https://img.shields.io/badge/safari%20-v12.0-brightgreen.svg" alt="safari">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Mac%20%7C%20Android-blue.svg" alt="platform">
-  <a href="https://www.baiduyun.wiki/zh-cn/donate.html">
-    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
+  <img src="https://img.shields.io/badge/TamperMonkey-v4.13-brightgreen.svg" alt="tampermonkey">
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-AGPLv3.0-lightgrey.svg" alt="LICENSE">
   </a>
-  <a href="https://github.com/syhyz1990/baiduyun">
-    <img src="https://img.shields.io/badge/Star-10k+-yellow.svg?style=social&logo=github" alt="stars">
-  </a>
+  <img src="https://img.shields.io/badge/Chrome-≥76.0-brightgreen.svg" alt="chrome">
+  <img src="https://img.shields.io/badge/Edge-≥88.0-brightgreen.svg" alt="chrome">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-blue.svg" alt="platform">
 </p>
+
+<div align="center">
+  <h3>
+    <a href="https://www.baiduyun.wiki">
+      Website
+    </a>
+    <span> | </span>
+    <a href="https://www.baiduyun.wiki/install.html">
+      Features
+    </a>
+    <span> | </span>
+    <a href="https://www.baiduyun.wiki/panlinker.user.js">
+      Downloads
+    </a>
+    <span> | </span>
+    <a href="https://www.baiduyun.wiki/download.html">
+      Software
+    </a>
+    <span> | </span>
+    <a href="https://www.baiduyun.wiki/zh-cn/question.html">
+      Q&A
+    </a>
+    <span> | </span>
+    <a href="https://github.com/syhyz1990/baiduyun/issues">
+      Issues
+    </a>
+  </h3>
+</div>
+
+<div align="center">
+  <strong>👉 一个免费开源的网盘下载助手 👈</strong><br>
+  <sub>适用于 Linux，macOS，Windows 平台</sub>
+</div>
 
 [English Docs](README_EN.md) | [中文文档](README.md)
 
