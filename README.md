@@ -44,6 +44,7 @@
   <strong>👉 一个免费开源的网盘下载助手 👈</strong><br>
   <sub>适用于 Linux，macOS，Windows 平台</sub>
 </div>
+<br>
 
 [中文文档](README.md) | [English Docs](README_EN.md)
 
