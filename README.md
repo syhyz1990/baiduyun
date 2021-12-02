@@ -50,7 +50,9 @@
 【网盘直链下载助手】是一款免费开源**获取百度网盘和阿里云盘文件真实下载地址**的油猴脚本，基于 PCSAPI，支持 Windows，Mac，Linux 等多平台，支持 IDM，XDown，Aria2 等多线程下载工具，支持 JSON-RPC 协议远程下载，支持 cURL 命令下载。
 
 ## 🎨 助手界面
-![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202111301311340.gif)
+| 百度网盘  | 阿里云盘 |
+|:-------------------------------------------------:|:-----------------------------------------------:|
+| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/5fPhsmidwInJrvq.gif)  | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011659864.gif)
 
 ## 📖 使用教程
 
