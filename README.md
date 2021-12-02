@@ -52,6 +52,14 @@
 ## 🎨 助手界面
 ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202111301311340.gif)
 
+## 📖 使用教程
+
+- **[Windows平台使用教程](https://www.baiduyun.wiki/zh-cn/windows/)**
+
+- **[MacOS平台使用教程](https://www.baiduyun.wiki/zh-cn/mac/)**
+
+- **[Linux平台使用教程](https://www.baiduyun.wiki/zh-cn/linux/)**
+
 ## 🔧 插件功能
 
 - ✅ 支持多种操作系统：Windows，Linux，Mac
@@ -60,6 +68,14 @@
 - ✅ 支持批量获取百度网盘和阿里云盘的文件下载链接
 - ✅ 可以通过 JSON-RPC 协议发送下载链接至本地或远程下载
 - ✅ 支持更换皮肤，自动更新，新版网盘界面
+
+## 💽 安装助手
+
+请确保已先安装 [Tampermonkey](http://pan.baiduyun.wiki/down) 脚本管理器
+
+- **[安装地址（官方）](https://www.baiduyun.wiki/install.html)**
+
+- **[安装地址（GreasyFork）](https://greasyfork.org/zh-CN/scripts/436446)**
 
 ## 📝 更新日志
 
@@ -76,22 +92,6 @@
 **v5.2.0** 添加 `cURL下载` 方式，无需安装下载器即可下载文件，详见 [免下载器 cURL命令](/zh-cn/curl)
 
 ...
-
-## 📖 使用教程
-
-- [Windows平台使用教程](https://www.baiduyun.wiki/zh-cn/windows/)
-
-- [MacOS平台使用教程](https://www.baiduyun.wiki/zh-cn/mac/)
-
-- [Linux平台使用教程](https://www.baiduyun.wiki/zh-cn/linux/)
-
-## 💽 安装助手
-
-请确保已先安装 [Tampermonkey](http://pan.baiduyun.wiki/down) 脚本管理器
-
-- **[安装地址（官方）](https://www.baiduyun.wiki/install.html)**
-
-- **[安装地址（GreasyFork）](https://greasyfork.org/zh-CN/scripts/436446)**
 
 ## 🚀 速度测试
 
