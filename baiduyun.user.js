@@ -873,7 +873,7 @@
             try {
                 return require('system-core:context/context.js').instanceForSystem.list.getSelected();
             } catch (e) {
-                return document.querySelector('.nd-main-layout').__vue__.$children[2].selectedList;
+                return document.querySelector('.nd-main-filelist').__vue__.selectedList;
             }
         },
 
