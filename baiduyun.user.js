@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.5.0
+// @version           5.5.2
 // @author            YouXiaoHou
 // @icon              https://www.baiduyun.wiki/48x48.png
 // @icon64            https://www.baiduyun.wiki/64x64.png
@@ -749,7 +749,7 @@
                     }
                 }
                 if (!params.bdstoken) {
-                    return base.message.error('提示：登录网盘后才能使用此功能哦！');
+                    return base.message.error('提示：请先登录网盘！');
                 }
                 let formData = new FormData();
                 formData.append('encrypt', params.encrypt);
@@ -873,7 +873,7 @@
             try {
                 return require('system-core:context/context.js').instanceForSystem.list.getSelected();
             } catch (e) {
-                return document.querySelector('.nd-main-layout').__vue__.$children[2].selectedList;
+                return document.querySelector('.nd-main-list').__vue__.selectedList;
             }
         },
 
@@ -1081,21 +1081,26 @@
                 if (selectList.length > 20) {
                     return base.message.error('提示：单次最多可勾选 20 个文件！');
                 }
-                let authorization = `${JSON.parse(base.getStorage('token')).token_type} ${JSON.parse(base.getStorage('token')).access_token}`;
-                let xShareToken = JSON.parse(base.getStorage('shareToken')).share_token;
-                for (let i = 0; i < selectList.length; i++) {
-                    let res = await base.post(pan.pcs[0], {
-                        expire_sec: 600,
-                        file_id: selectList[i].fileId,
-                        share_id: selectList[i].shareId
-                    }, {
-                        authorization,
-                        "content-type": "application/json;charset=utf-8",
-                        "x-share-token": xShareToken
-                    });
-                    if (res.download_url) {
-                        selectList[i].downloadUrl = res.download_url;
+                try {
+                    let authorization = `${JSON.parse(base.getStorage('token')).token_type} ${JSON.parse(base.getStorage('token')).access_token}`;
+                    let xShareToken = JSON.parse(base.getStorage('shareToken')).share_token;
+
+                    for (let i = 0; i < selectList.length; i++) {
+                        let res = await base.post(pan.pcs[0], {
+                            expire_sec: 600,
+                            file_id: selectList[i].fileId,
+                            share_id: selectList[i].shareId
+                        }, {
+                            authorization,
+                            "content-type": "application/json;charset=utf-8",
+                            "x-share-token": xShareToken
+                        });
+                        if (res.download_url) {
+                            selectList[i].downloadUrl = res.download_url;
+                        }
                     }
+                } catch (e) {
+                    return base.message.error('提示：请先登录网盘！');
                 }
             }
             let html = this.generateDom(selectList);
