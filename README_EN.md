@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://www.baiduyun.wiki">
-    <img width="100" height="100" src="https://www.baiduyun.wiki/logo.png">
+  <a href="https://www.youxiaohou.com">
+    <img width="100" height="100" src="https://www.youxiaohou.com/logo.png">
   </a>
 </p>
 
@@ -18,23 +18,23 @@
 
 <div align="center">
   <h3>
-    <a href="https://www.baiduyun.wiki">
+    <a href="https://www.youxiaohou.com">
       Website
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/install.html">
+    <a href="https://www.youxiaohou.com/install.html">
       Features
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/panlinker.user.js">
+    <a href="https://www.youxiaohou.com/panlinker.user.js">
       Downloads
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/download.html">
+    <a href="https://www.youxiaohou.com/download.html">
       Software
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/zh-cn/question.html">
+    <a href="https://www.youxiaohou.com/zh-cn/question.html">
       Q&A
     </a>
     <span> | </span>
@@ -61,17 +61,17 @@ Support Baidu Netdisk and Aliyun NetDisk web page. After installation, a `Downlo
 
 ## 📖 Tutorial
 
-- [Windows](https://www.baiduyun.wiki/zh-cn/windows/)
+- [Windows](https://www.youxiaohou.com/zh-cn/windows/)
 
-- [MacOS](https://www.baiduyun.wiki/zh-cn/mac/)
+- [MacOS](https://www.youxiaohou.com/zh-cn/mac/)
 
-- [Linux](https://www.baiduyun.wiki/zh-cn/linux/)
+- [Linux](https://www.youxiaohou.com/zh-cn/linux/)
 
 ## 💽 Install
 
-Please make sure you have installed [Tampermonkey](http://pan.baiduyun.wiki/down)
+Please make sure you have installed [Tampermonkey](http://pan.youxiaohou.com/down)
 
-- [Install](https://www.baiduyun.wiki/install.html)
+- [Install](https://www.youxiaohou.com/install.html)
 
 ## ✨ Features
 
@@ -86,18 +86,18 @@ Please make sure you have installed [Tampermonkey](http://pan.baiduyun.wiki/down
 
 Speed test of SVIP using different download software:
 
-- **[IDM download speed](http://pan.baiduyun.wiki/down)**
+- **[IDM download speed](http://pan.youxiaohou.com/down)**
 
 ![IDM](https://i.loli.net/2020/10/07/PDeTtzvUNXEcdwB.gif)
 
-- **[XDown download speed](http://pan.baiduyun.wiki/down)**
+- **[XDown download speed](http://pan.youxiaohou.com/down)**
 
 ![XDown](https://i.loli.net/2020/10/07/jOoC17iVQ8ef3X4.gif)
 
-- **[Motrix download speed](http://pan.baiduyun.wiki/down)**
+- **[Motrix download speed](http://pan.youxiaohou.com/down)**
 
 ![Motrix](https://i.loli.net/2020/10/07/KEqvPQeC7YDVTs6.gif)
 
 ## 👻 Notes
 
-Folders are not supported, you can select files to download in batches, please refer to [FAQ](https://www.baiduyun.wiki/zh-cn/question.html)
+Folders are not supported, you can select files to download in batches, please refer to [FAQ](https://www.youxiaohou.com/zh-cn/question.html)
