@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://www.baiduyun.wiki" title="点击访问">
-    <img width="100" height="100" src="https://www.baiduyun.wiki/logo.png" alt="网盘直链下载助手">
+  <a href="https://www.youxiaohou.com" title="点击访问">
+    <img width="100" height="100" src="https://www.youxiaohou.com/logo.png" alt="网盘直链下载助手">
   </a>
 </p>
 
@@ -14,26 +14,26 @@
   <img src="https://img.shields.io/badge/Chrome-≥76.0-brightgreen.svg" alt="chrome">
   <img src="https://img.shields.io/badge/Edge-≥88.0-brightgreen.svg" alt="edge">
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-blue.svg" alt="platform">
-  <a href="https://www.baiduyun.wiki" title="点击访问">
+  <a href="https://www.youxiaohou.com" title="点击访问">
     <img src="https://img.shields.io/badge/Author-油小猴-red.svg">
   </a>
 </p>
 
 <div align="center">
   <h3>
-    <a href="https://www.baiduyun.wiki">
+    <a href="https://www.youxiaohou.com">
       使用说明
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/install.html">
+    <a href="https://www.youxiaohou.com/install.html">
       安装地址
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/download.html">
+    <a href="https://www.youxiaohou.com/download.html">
       相关软件
     </a>
     <span> | </span>
-    <a href="https://www.baiduyun.wiki/zh-cn/question.html">
+    <a href="https://www.youxiaohou.com/zh-cn/question.html">
       常见问题
     </a>
     <span> | </span>
@@ -60,11 +60,11 @@
 
 ## 📖 使用教程
 
-- **[Windows平台使用教程](https://www.baiduyun.wiki/zh-cn/windows/)**
+- **[Windows平台使用教程](https://www.youxiaohou.com/zh-cn/windows/)**
 
-- **[MacOS平台使用教程](https://www.baiduyun.wiki/zh-cn/mac/)**
+- **[MacOS平台使用教程](https://www.youxiaohou.com/zh-cn/mac/)**
 
-- **[Linux平台使用教程](https://www.baiduyun.wiki/zh-cn/linux/)**
+- **[Linux平台使用教程](https://www.youxiaohou.com/zh-cn/linux/)**
 
 ## 🔧 插件功能
 
@@ -77,9 +77,9 @@
 
 ## 💽 安装助手
 
-请确保已先安装 [Tampermonkey](http://pan.baiduyun.wiki/down) 脚本管理器
+请确保已先安装 [Tampermonkey](http://pan.youxiaohou.com/down) 脚本管理器
 
-- **[安装地址（官方）](https://www.baiduyun.wiki/install.html)**
+- **[安装地址（官方）](https://www.youxiaohou.com/install.html)**
 
 - **[安装地址（GreasyFork）](https://greasyfork.org/zh-CN/scripts/436446)**
 
@@ -105,12 +105,12 @@
 
 超级会员使用不同下载软件的速度测试：
 
-| [IDM 百度网盘](http://pan.baiduyun.wiki/down)  | [IDM 阿里云盘](http://pan.baiduyun.wiki/down) |
+| [IDM 百度网盘](http://pan.youxiaohou.com/down)  | [IDM 阿里云盘](http://pan.youxiaohou.com/down) |
 |:-------------------------------------------------:|:-----------------------------------------------:|
 | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/5fPhsmidwInJrvq.gif)  | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011659864.gif)         |
-| [XDown 百度网盘](http://pan.baiduyun.wiki/down) | [XDown 阿里云盘](http://pan.baiduyun.wiki/down) |
+| [XDown 百度网盘](http://pan.youxiaohou.com/down) | [XDown 阿里云盘](http://pan.youxiaohou.com/down) |
 | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/Sp7J2xTlBgLhdNQ.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011735743.gif) |
-| [Motrix 百度网盘](http://pan.baiduyun.wiki/down) | [Motrix 阿里云盘](http://pan.baiduyun.wiki/down)  |
+| [Motrix 百度网盘](http://pan.youxiaohou.com/down) | [Motrix 阿里云盘](http://pan.youxiaohou.com/down)  |
 | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/dH5c2sLtCVjfrUm.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011743905.gif) |
 
 ## 💻 关注我们不迷路
