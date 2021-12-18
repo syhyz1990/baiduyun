@@ -7,16 +7,13 @@
 <h1 align="center">网盘直链下载助手</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/TamperMonkey-v4.13-brightgreen.svg" alt="tampermonkey">
+  <img src="https://img.shields.io/badge/TamperMonkey-v4.13-brightgreen.svg?style=flat-square" alt="tampermonkey">
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-AGPLv3.0-lightgrey.svg" alt="LICENSE">
+    <img src="https://img.shields.io/badge/license-AGPLv3.0-lightgrey.svg?style=flat-square" alt="LICENSE">
   </a>
-  <img src="https://img.shields.io/badge/Chrome-≥76.0-brightgreen.svg" alt="chrome">
-  <img src="https://img.shields.io/badge/Edge-≥88.0-brightgreen.svg" alt="edge">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-blue.svg" alt="platform">
-  <a href="https://www.youxiaohou.com" title="点击访问">
-    <img src="https://img.shields.io/badge/Author-油小猴-red.svg">
-  </a>
+  <img src="https://img.shields.io/badge/Chrome-≥76.0-brightgreen.svg?style=flat-square" alt="chrome">
+  <img src="https://img.shields.io/badge/Edge-≥88.0-brightgreen.svg?style=flat-square" alt="edge">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-blue.svg?style=flat-square" alt="platform">
 </p>
 
 <div align="center">
