@@ -1,14 +1,16 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.5.3
+// @version           5.5.4
 // @author            YouXiaoHou
 // @icon              https://www.youxiaohou.com/48x48.png
 // @icon64            https://www.youxiaohou.com/64x64.png
 // @description       【网盘直链下载助手】是一款免费开源获取网盘文件真实下载地址的油猴插件，基于开放平台API，支持 Windows，Mac，Linux 等多平台，即可使用系统自带的终端 cURL 命令，也可以使用 IDM，Xdown 等多线程工具高效下载，支持 Aria RPC 协议远程下载。支持自定义更换皮肤，百度网盘，阿里云盘。
 // @license           AGPL-3.0
-// @homepage          https://www.youxiaohou.com
+// @homepage          https://www.youxiaohou.com/install.html
 // @supportURL        https://github.com/syhyz1990/baiduyun
+// @updateURL         https://www.youxiaohou.com/panlinker.user.js
+// @downloadURL       https://www.youxiaohou.com/panlinker.user.js
 // @match             *://pan.baidu.com/disk/home*
 // @match             *://yun.baidu.com/disk/home*
 // @match             *://pan.baidu.com/disk/main*
@@ -19,8 +21,8 @@
 // @match             *://yun.baidu.com/share/*
 // @match             *://www.aliyundrive.com/s/*
 // @match             *://www.aliyundrive.com/drive*
-// @require           https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js
-// @require           https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
+// @require           https://unpkg.com/jquery@3.6.0/dist/jquery.min.js
+// @require           https://unpkg.com/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
 // @connect           baidu.com
 // @connect           baidupcs.com
 // @connect           aliyundrive.com
@@ -1201,21 +1203,18 @@
 
         getSelectedList() {
             try {
-                let reactDom = document.getElementsByClassName(pan.dom.list)[0];
                 let selectedList = [];
-                for (let key in reactDom) {
-                    if (key.startsWith("__reactFiber")) {
-                        let props = reactDom[key].return.pendingProps.value;
-                        let fileList = props.dataSource || [];
-                        let selectedKeys = props.selectedKeys.split(',');
-
-                        fileList.forEach((val) => {
-                            if (selectedKeys.includes(val.fileId)) {
-                                selectedList.push(val);
-                            }
-                        });
-                        return selectedList;
-                    }
+                let reactDom = document.getElementsByClassName(pan.dom.list)[0];
+                let reactKey = Object.keys(reactDom).find(p => p.startsWith('__reactFiber'));
+                if (reactKey) {
+                    let props = reactDom[reactKey].return.pendingProps.value;
+                    let fileList = props.dataSource || [];
+                    let selectedKeys = props.selectedKeys.split(',');
+                    fileList.forEach((val) => {
+                        if (selectedKeys.includes(val.fileId)) {
+                            selectedList.push(val);
+                        }
+                    });
                 }
                 return selectedList;
             } catch (e) {
