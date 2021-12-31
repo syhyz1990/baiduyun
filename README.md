@@ -50,6 +50,8 @@
 
 【网盘直链下载助手】是一款免费开源**获取百度网盘和阿里云盘文件真实下载地址**的油猴脚本，基于 PCSAPI，支持 Windows，Mac，Linux 等多平台，支持 IDM，XDown，Aria2 等多线程下载工具，支持 JSON-RPC 协议远程下载，支持 cURL 命令下载。
 
+**建议配合网盘超级会员使用**
+
 ## 🎨 助手界面
 | 百度网盘  | 阿里云盘 |
 |:-------------------------------------------------:|:-----------------------------------------------:|
@@ -109,6 +111,3 @@
 | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/Sp7J2xTlBgLhdNQ.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011735743.gif) |
 | [Motrix 百度网盘](http://pan.youxiaohou.com/down) | [Motrix 阿里云盘](http://pan.youxiaohou.com/down)  |
 | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/dH5c2sLtCVjfrUm.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011743905.gif) |
-
-## 💻 关注我们不迷路
-![](https://cdn.jsdelivr.net/gh/youxiaohou/img/cmqN5niG6ER9oZ2.png)
