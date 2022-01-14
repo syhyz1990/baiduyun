@@ -84,11 +84,13 @@
 
 ## 📝 更新日志
 
+**v5.5.4** CDN 从 cdn.jsdelivr.net 替换为 unpkg.com。
+
 **v5.5.2** 修复一系列Bug。
 
 **v5.5.0** 加入了对阿里云盘的支持。
 
-**v5.4.1** 修复了 Edge 浏览器获取 Aria 链接失效的问题，请更新网盘万能助手到 [v2.4.0](/zh-cn/assistant)。
+**v5.4.1** 修复了 Edge 浏览器获取 Aria 链接失效的问题，请更新网盘万能助手到 [v2.4.0](https://www.youxiaohou.com/zh-cn/assistant)。
 
 **v5.4.0** 增加显示文件大小的功能（鼠标划过文件名时显示）。下载列表按文件名排序。
 
