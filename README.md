@@ -52,10 +52,17 @@
 
 **建议配合网盘超级会员使用**
 
+支持下面四大网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`
+
 ## 🎨 助手界面
-| 百度网盘  | 阿里云盘 |
-|:-------------------------------------------------:|:-----------------------------------------------:|
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/5fPhsmidwInJrvq.gif)  | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011659864.gif)
+
+|  百度网盘 |  阿里云盘 |
+|:---:|:---:|
+| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/b64df172-4610-455c-8fbc-d5327753b9da.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/f24a0253-4fbc-4b51-8dba-b96efa92f5e8.gif)  |
+
+| 天翼云盘 | 迅雷云盘 |
+|:---:|:---:|
+| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/09202ae1-beab-4ff9-9c35-cd45462c08d6.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/1f620519-23c6-4cfb-9f54-b98ef4f01d11.gif)  |
 
 ## 📖 使用教程
 
