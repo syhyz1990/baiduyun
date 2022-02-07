@@ -74,6 +74,7 @@
 
 ## 🔧 插件功能
 
+- ✅ 支持多种网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`
 - ✅ 支持多种操作系统：Windows，Linux，Mac
 - ✅ 支持多种下载协议：HTTP，JSON-RPC，cURL
 - ✅ 支持多种下载器：IDM，XDown，Aria2，NDM，Motrix，终端
@@ -90,6 +91,8 @@
 - **[安装地址（GreasyFork）](https://greasyfork.org/zh-CN/scripts/436446)**
 
 ## 📝 更新日志
+
+**v5.6.0** 加入对天翼云盘和迅雷云盘的支持。
 
 **v5.5.4** CDN 从 cdn.jsdelivr.net 替换为 unpkg.com。
 
