@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.6.2
+// @version           5.6.3
 // @author            YouXiaoHou
 // @icon              https://www.youxiaohou.com/48x48.png
 // @icon64            https://www.youxiaohou.com/64x64.png
@@ -1002,7 +1002,12 @@
             });
             doc.on('click', '.listener-link-api', async (e) => {
                 e.preventDefault();
-                $('#downloadIframe').attr('src', e.currentTarget.dataset.link);
+                let d = document.createElement("a");
+                d.download = "download";
+                d.rel = "noopener";
+                d.href = e.currentTarget.dataset.link;
+                d.dispatchEvent(new MouseEvent("click"))
+                //$('#downloadIframe').attr('src', e.currentTarget.dataset.link);
             });
             doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
                 e.preventDefault();
@@ -1036,11 +1041,6 @@
                 }), url = `${pan.d}/?rpc=${base.e(rpc)}#${base.getValue('setting_rpc_token')}`;
                 GM_openInTab(url, {active: true});
             });
-            document.documentElement.addEventListener('click', (e) => {
-                if (e.target.nodeName === 'A' && ~e.target.className.indexOf('pl-a')) {
-                    e.stopPropagation();
-                }
-            }, true);
         },
 
         addButton() {
@@ -1159,7 +1159,7 @@
                 if (mode === 'api') {
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}">${dlink}</a>
+                                <a class="pl-item-link listener-link-api" data-filename="${filename}" data-link="${dlink}" data-index="${i}">${dlink}</a>
                                 </div>`;
                 }
                 if (mode === 'aria') {
