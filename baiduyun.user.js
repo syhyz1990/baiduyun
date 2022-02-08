@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.6.0
+// @version           5.6.2
 // @author            YouXiaoHou
 // @icon              https://www.youxiaohou.com/48x48.png
 // @icon64            https://www.youxiaohou.com/64x64.png
@@ -259,6 +259,9 @@
                 name: 'setting_rpc_port',
                 value: '16800'
             }, {
+                name: 'setting_rpc_path',
+                value: '/jsonrpc'
+            }, {
                 name: 'setting_rpc_token',
                 value: ''
             }, {
@@ -285,6 +288,7 @@
                 colorList = ['#09AAFF', '#cc3235', '#526efa', '#518c17', '#ed944b', '#f969a5', '#bca280'];
             dom += `<label class="pl-setting-label"><div class="pl-label">RPC主机</div><input type="text"  placeholder="主机地址，需带上http(s)://" class="pl-input listener-domain" value="${base.getValue('setting_rpc_domain')}"></label>`;
             dom += `<label class="pl-setting-label"><div class="pl-label">RPC端口</div><input type="text" placeholder="端口号，例如：Motrix为16800" class="pl-input listener-port" value="${base.getValue('setting_rpc_port')}"></label>`;
+            dom += `<label class="pl-setting-label"><div class="pl-label">RPC路径</div><input type="text" placeholder="路径，默认为/jsonrpc" class="pl-input listener-path" value="${base.getValue('setting_rpc_path')}"></label>`;
             dom += `<label class="pl-setting-label"><div class="pl-label">RPC密钥</div><input type="text" placeholder="无密钥无需填写" class="pl-input listener-token" value="${base.getValue('setting_rpc_token')}"></label>`;
             dom += `<label class="pl-setting-label"><div class="pl-label">保存路径</div><input type="text" placeholder="文件下载后保存路径，例如：D:" class="pl-input listener-dir" value="${base.getValue('setting_rpc_dir')}"></label>`;
 
@@ -321,6 +325,9 @@
             });
             doc.on('input', '.listener-port', async (e) => {
                 base.setValue('setting_rpc_port', e.target.value);
+            });
+            doc.on('input', '.listener-path', async (e) => {
+                base.setValue('setting_rpc_path', e.target.value);
             });
             doc.on('input', '.listener-token', async (e) => {
                 base.setValue('setting_rpc_token', e.target.value);
@@ -869,13 +876,14 @@
             let rpc = {
                 domain: base.getValue('setting_rpc_domain'),
                 port: base.getValue('setting_rpc_port'),
+                path: base.getValue('setting_rpc_path'),
                 token: base.getValue('setting_rpc_token'),
                 dir: base.getValue('setting_rpc_dir'),
             };
             let BDUSS = this.getBDUSS();
             if (!BDUSS) return 'assistant';
 
-            let url = `${rpc.domain}:${rpc.port}/jsonrpc`;
+            let url = `${rpc.domain}:${rpc.port}${rpc.path}`;
             let rpcData = {
                 id: new Date().getTime(),
                 jsonrpc: '2.0',
@@ -1151,7 +1159,7 @@
                 if (mode === 'api') {
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link listener-link-api" data-filename="${filename}" data-link="${dlink}" data-index="${i}">${dlink}</a>
+                                <a class="pl-item-link" href="${dlink}" data-filename="${filename}" data-link="${dlink}" data-index="${i}">${dlink}</a>
                                 </div>`;
                 }
                 if (mode === 'aria') {
@@ -1200,11 +1208,12 @@
             let rpc = {
                 domain: base.getValue('setting_rpc_domain'),
                 port: base.getValue('setting_rpc_port'),
+                path: base.getValue('setting_rpc_path'),
                 token: base.getValue('setting_rpc_token'),
                 dir: base.getValue('setting_rpc_dir'),
             };
 
-            let url = `${rpc.domain}:${rpc.port}/jsonrpc`;
+            let url = `${rpc.domain}:${rpc.port}${rpc.path}`;
             let rpcData = {
                 id: new Date().getTime(),
                 jsonrpc: '2.0',
@@ -1349,11 +1358,6 @@
                 }), url = `${pan.d}/?rpc=${base.e(rpc)}#${base.getValue('setting_rpc_token')}`;
                 GM_openInTab(url, {active: true});
             });
-            document.documentElement.addEventListener('click', (e) => {
-                if (e.target.nodeName === 'A' && ~e.target.className.indexOf('pl-a')) {
-                    e.stopPropagation();
-                }
-            }, true);
         },
 
         addButton() {
@@ -1507,11 +1511,12 @@
             let rpc = {
                 domain: base.getValue('setting_rpc_domain'),
                 port: base.getValue('setting_rpc_port'),
+                path: base.getValue('setting_rpc_path'),
                 token: base.getValue('setting_rpc_token'),
                 dir: base.getValue('setting_rpc_dir'),
             };
 
-            let url = `${rpc.domain}:${rpc.port}/jsonrpc`;
+            let url = `${rpc.domain}:${rpc.port}${rpc.path}`;
             let rpcData = {
                 id: new Date().getTime(),
                 jsonrpc: '2.0',
@@ -1535,7 +1540,7 @@
             try {
                 return document.querySelector(".c-file-list").__vue__.selectedList;
             } catch (e) {
-                return [];
+                return [document.querySelector(".info-detail").__vue__.fileDetail];
             }
         },
 
@@ -1647,11 +1652,6 @@
                 }), url = `${pan.d}/?rpc=${base.e(rpc)}#${base.getValue('setting_rpc_token')}`;
                 GM_openInTab(url, {active: true});
             });
-            document.documentElement.addEventListener('click', (e) => {
-                if (e.target.nodeName === 'A' && ~e.target.className.indexOf('pl-a')) {
-                    e.stopPropagation();
-                }
-            }, true);
         },
 
         addButton() {
@@ -1815,11 +1815,12 @@
             let rpc = {
                 domain: base.getValue('setting_rpc_domain'),
                 port: base.getValue('setting_rpc_port'),
+                path: base.getValue('setting_rpc_path'),
                 token: base.getValue('setting_rpc_token'),
                 dir: base.getValue('setting_rpc_dir'),
             };
 
-            let url = `${rpc.domain}:${rpc.port}/jsonrpc`;
+            let url = `${rpc.domain}:${rpc.port}${rpc.path}`;
             let rpcData = {
                 id: new Date().getTime(),
                 jsonrpc: '2.0',
