@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.6.3
+// @version           5.6.6
 // @author            YouXiaoHou
 // @icon              https://www.youxiaohou.com/48x48.png
 // @icon64            https://www.youxiaohou.com/64x64.png
-// @description       【网盘直链下载助手】是一款免费开源获取网盘文件真实下载地址的油猴插件，基于开放平台API，支持 Windows，Mac，Linux 等多平台，即可使用系统自带的终端 cURL 命令，也可以使用 IDM，Xdown 等多线程工具高效下载，支持 Aria RPC 协议远程下载。支持自定义更换皮肤，百度网盘，阿里云盘，天翼云盘，迅雷云盘。
-// @license           AGPL-3.0
+// @description       👆👆👆👆👆👆👆可以获取网盘文件真实下载地址。现已支持 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 四大网盘，可使用 IDM，Xdown，Aria2，Curl 等工具🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ 等 18 种浏览器，可在无法安装客户端的环境下使用，助手免费开源。😎
+// @license           AGPL
 // @homepage          https://www.youxiaohou.com/install.html
 // @supportURL        https://github.com/syhyz1990/baiduyun
 // @updateURL         https://www.youxiaohou.com/panlinker.user.js
@@ -275,7 +275,7 @@
                 value: '#09AAFF'
             }, {
                 name: 'setting_init_code',
-                value: ''
+                value: '80149'
             }];
 
             value.forEach((v) => {
@@ -413,7 +413,12 @@
             .pl-progress-stop{ flex: 0 0 50px; padding: 0 10px; background: #cc3235; color: #fff; border-radius: 3px; cursor: pointer;margin-left:10px;height:20px}
             .pl-progress-inner-text:after { display: inline-block;content: "";height: 100%;vertical-align: middle;}
             .pl-btn-primary { background: ${color}; border: 0; border-radius: 4px; color: #ffffff; cursor: pointer; font-size: 12px; outline: none; display:flex; align-items: center; justify-content: center; margin: 2px 0; padding: 6px 0;transition: 0.3s opacity; }
+            .pl-btn-primary:hover { opacity: 0.9;transition: 0.3s opacity; }
+            .pl-btn-success { background: #55af28; animation: easeOpacity 1.2s 2; animation-fill-mode:forwards }
             .pl-btn-info { background: #606266; }
+            .pl-btn-warning { background: #da9328; }
+            .pl-btn-warning { background: #da9328; }
+            .pl-btn-danger { background: #cc3235; }
             .ali-button {display: inline-flex;align-items: center;justify-content: center;border: 0 solid transparent;border-radius: 5px;box-shadow: 0 0 0 0 transparent;width: fit-content;white-space: nowrap;flex-shrink: 0;font-size: 14px;line-height: 1.5;outline: 0;touch-action: manipulation;transition: background .3s ease,color .3s ease,border .3s ease,box-shadow .3s ease;color: #fff;background: rgb(99 125 255);margin-left: 20px;padding: 1px 12px;position: relative; cursor:pointer; height: 32px;}
             .ali-button:hover {background: rgb(122, 144, 255)}
             .tianyi-button {margin-right: 20px; padding: 4px 12px; border-radius: 4px; color: #fff; font-size: 12px; border: 1px solid #0073e3; background: #2b89ea; cursor: pointer; position: relative;}
@@ -424,10 +429,7 @@
             .pl-dropdown-menu-item { height: 30px;display: flex;align-items: center;justify-content: center; }
             .pl-dropdown-menu-item:hover { background-color: rgba(132,133,141,0.08);}
             .pl-button-init { opacity: 0.5; animation: easeInitOpacity 1.2s 3; animation-fill-mode:forwards }
-            @keyframes easeInitOpacity { from { opacity: 0.5; } 50% { opacity: 1 } to { opacity: 0.5; } }
-            .pl-btn-primary:hover { opacity: 0.9;transition: 0.3s opacity; }
-            .pl-btn-danger { background: #cc3235; }
-            .pl-btn-success { background: #55af28; animation: easeOpacity 1.2s 2; animation-fill-mode:forwards }
+             @keyframes easeInitOpacity { from { opacity: 0.5; } 50% { opacity: 1 } to { opacity: 0.5; } }
              @keyframes easeOpacity { from { opacity: 1; } 50% { opacity: 0.35 } to { opacity: 1; } }
             .element-clicked { opacity: 0.5; }
             .pl-extra { margin-top: 10px;display:flex}
@@ -660,10 +662,10 @@
                 o.tip.hide();
                 o.link.show();
             });
-            doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
+            doc.on('click', '.listener-link-aria, .listener-copy-all', (e) => {
                 e.preventDefault();
                 if (!e.target.dataset.link) {
-                    $(e.target).removeClass('listener-copy-aria').addClass('pl-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank" class="pl-a">点击此处安装</a>👈`);
+                    $(e.target).removeClass('listener-copy-all').addClass('pl-btn-danger').html(`${pan.init[5]}👉<a href="${pan.assistant}" target="_blank" class="pl-a">点击此处安装</a>👈`);
                 } else {
                     base.setClipboard(decodeURIComponent(e.target.dataset.link));
                     $(e.target).text('复制成功，快去粘贴吧！').animate({opacity: '0.5'}, "slow");
@@ -846,7 +848,7 @@
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
+                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到 RPC 下载器</span></button></div>`;
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, pan.ua);
@@ -864,11 +866,13 @@
             });
             content += '</div>';
             if (mode === 'aria')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
-            if (mode === 'rpc')
-                content += '<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">配置RPC服务</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>';
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button></div>`;
+            if (mode === 'rpc') {
+                let rpc = base.getValue('setting_rpc_domain')+':'+base.getValue('setting_rpc_port')+base.getValue('setting_rpc_path')
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button title="${rpc}" class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px">设置 RPC 参数（当前为：${rpc}）</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>`;
+            }
             if (mode === 'curl')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button><button class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
             return content;
         },
 
@@ -969,7 +973,7 @@
             (`https://api.youxiaohou.com/config?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addButton();
+            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -1009,7 +1013,7 @@
                 d.dispatchEvent(new MouseEvent("click"))
                 //$('#downloadIframe').attr('src', e.currentTarget.dataset.link);
             });
-            doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
+            doc.on('click', '.listener-link-aria, .listener-copy-all', (e) => {
                 e.preventDefault();
                 base.setClipboard(decodeURIComponent(e.target.dataset.link));
                 $(e.target).text('复制成功，快去粘贴吧！').animate({opacity: '0.5'}, "slow");
@@ -1178,7 +1182,7 @@
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
+                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到 RPC 下载器</span></button></div>`;
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
@@ -1196,11 +1200,13 @@
             });
             content += '</div>';
             if (mode === 'aria')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
-            if (mode === 'rpc')
-                content += '<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">配置RPC服务</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>';
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button></div>`;
+            if (mode === 'rpc') {
+                let rpc = base.getValue('setting_rpc_domain')+':'+base.getValue('setting_rpc_port')+base.getValue('setting_rpc_path')
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button title="${rpc}" class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px">设置 RPC 参数（当前为：${rpc}）</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>`;
+            }
             if (mode === 'curl')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button><button class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
             return content;
         },
 
@@ -1291,7 +1297,7 @@
             (`https://api.youxiaohou.com/config/ali?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addButton();
+            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -1326,7 +1332,7 @@
                 e.preventDefault();
                 $('#downloadIframe').attr('src', e.currentTarget.dataset.link);
             });
-            doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
+            doc.on('click', '.listener-link-aria, .listener-copy-all', (e) => {
                 e.preventDefault();
                 base.setClipboard(decodeURIComponent(e.target.dataset.link));
                 $(e.target).text('复制成功，快去粘贴吧！').animate({opacity: '0.5'}, "slow");
@@ -1481,7 +1487,7 @@
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
+                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到 RPC 下载器</span></button></div>`;
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
@@ -1499,11 +1505,13 @@
             });
             content += '</div>';
             if (mode === 'aria')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
-            if (mode === 'rpc')
-                content += '<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">配置RPC服务</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>';
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button></div>`;
+            if (mode === 'rpc') {
+                let rpc = base.getValue('setting_rpc_domain')+':'+base.getValue('setting_rpc_port')+base.getValue('setting_rpc_path')
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button title="${rpc}" class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px">设置 RPC 参数（当前为：${rpc}）</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>`;
+            }
             if (mode === 'curl')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button><button class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
             return content;
         },
 
@@ -1581,7 +1589,7 @@
             (`https://api.youxiaohou.com/config/tianyi?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addButton();
+            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -1620,7 +1628,7 @@
                 base.setClipboard(e.target.dataset.filename);
                 $(e.target).text('复制成功').animate({opacity: '0.5'}, "slow");
             });
-            doc.on('click', '.listener-link-aria, .listener-copy-aria', (e) => {
+            doc.on('click', '.listener-link-aria, .listener-copy-all', (e) => {
                 e.preventDefault();
                 base.setClipboard(decodeURIComponent(e.target.dataset.link));
                 $(e.target).text('复制成功，快去粘贴吧！').animate({opacity: '0.5'}, "slow");
@@ -1721,12 +1729,12 @@
                     return message.error('提示：单次最多可勾选 20 个文件！');
                 }
                 try {
-                    let credentials = null, captcha = null;
+                    let credentials = {}, captcha = {};
                     for (let i = 0; i < localStorage.length; i++) {
-                        if (localStorage.key(i).startsWith('credentials_')) {
+                        if (/^credentials_/.test(localStorage.key(i))) {
                             credentials = JSON.parse(base.getStorage(localStorage.key(i)));
                         }
-                        if (localStorage.key(i).startsWith('captcha_')) {
+                        if (/^captcha_[\w]{16}/.test(localStorage.key(i))) {
                             captcha = JSON.parse(base.getStorage(localStorage.key(i)));
                         }
                     }
@@ -1785,7 +1793,7 @@
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到RPC下载器</span></button></div>`;
+                                <button class="pl-item-link listener-link-rpc pl-btn-primary pl-btn-info" data-filename="${filename}" data-link="${dlink}"><em class="icon icon-device"></em><span style="margin-left: 5px;">推送到 RPC 下载器</span></button></div>`;
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
@@ -1803,11 +1811,13 @@
             });
             content += '</div>';
             if (mode === 'aria')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-aria" data-link="${alinkAllText}">复制全部链接</button></div>`;
-            if (mode === 'rpc')
-                content += '<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">配置RPC服务</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>';
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button></div>`;
+            if (mode === 'rpc') {
+                let rpc = base.getValue('setting_rpc_domain')+':'+base.getValue('setting_rpc_port')+base.getValue('setting_rpc_path')
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-send-rpc">发送全部链接</button><button title="${rpc}" class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px">设置 RPC 参数（当前为：${rpc}）</button><button class="pl-btn-primary pl-btn-success listener-rpc-task" style="margin-left: 10px;display: none">查看下载任务</button></div>`;
+            }
             if (mode === 'curl')
-                content += `<div class="pl-extra"><button class="pl-btn-primary listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
+                content += `<div class="pl-extra"><button class="pl-btn-primary listener-copy-all" data-link="${alinkAllText}">复制全部链接</button><button class="pl-btn-primary pl-btn-warning listener-open-setting" style="margin-left: 10px;">设置终端类型（当前为：${terminalType[base.getValue('setting_terminal_type')]}）</button></div>`;
             return content;
         },
 
@@ -1893,7 +1903,7 @@
             (`https://api.youxiaohou.com/config/xunlei?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addButton();
+            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
