@@ -86,9 +86,7 @@
 
 请确保已先安装 [Tampermonkey](http://pan.youxiaohou.com/down) 脚本管理器
 
-- **[安装地址（官方）](https://www.youxiaohou.com/install.html)**
-
-- **[安装地址（GreasyFork）](https://greasyfork.org/zh-CN/scripts/436446)**
+- **[安装地址（推荐）](https://www.youxiaohou.com/install.html)**
 
 ## 📝 更新日志
 
