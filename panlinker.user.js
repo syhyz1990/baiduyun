@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           5.8.1
+// @version           5.8.4
 // @author            YouXiaoHou
 // @icon              https://www.youxiaohou.com/48x48.png
 // @icon64            https://www.youxiaohou.com/64x64.png
@@ -25,6 +25,7 @@
 // @match             *://pan.xunlei.com/*
 // @require           https://unpkg.com/jquery@3.6.0/dist/jquery.min.js
 // @require           https://unpkg.com/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
+// @require           https://unpkg.com/js-md5@0.7.3/build/md5.min.js
 // @connect           baidu.com
 // @connect           baidupcs.com
 // @connect           aliyundrive.com
@@ -120,6 +121,10 @@
             return '';
         },
 
+        isType(obj) {
+            return Object.prototype.toString.call(obj).replace(/^\[object (.+)\]$/, '$1').toLowerCase();
+        },
+
         getValue(name) {
             return GM_getValue(name);
         },
@@ -129,10 +134,17 @@
         },
 
         getStorage(key) {
-            return localStorage.getItem(key);
+            try {
+                return JSON.parse(localStorage.getItem(key));
+            } catch (e) {
+                return localStorage.getItem(key);
+            }
         },
 
         setStorage(key, value) {
+            if (this.isType(value) === 'object' || this.isType(value) === 'array') {
+                return localStorage.setItem(key, JSON.stringify(value));
+            }
             return localStorage.setItem(key, value);
         },
 
@@ -191,7 +203,7 @@
         },
 
         post(url, data, headers, type) {
-            if (Object.prototype.toString.call(data) === '[object Object]') {
+            if (this.isType(data) === 'object') {
                 data = JSON.stringify(data);
             }
             return new Promise((resolve, reject) => {
@@ -232,6 +244,20 @@
                     },
                     onloadstart() {
                         extra && extra.filename && extra.index && (request[extra.index] = requestObj);
+                    },
+                    onerror: (err) => {
+                        reject(err);
+                    },
+                });
+            });
+        },
+
+        getFinalUrl(url, headers) {
+            return new Promise((resolve, reject) => {
+                let requestObj = GM_xmlhttpRequest({
+                    method: "GET", url, headers,
+                    onload: (res) => {
+                        resolve(res.finalUrl);
                     },
                     onerror: (err) => {
                         reject(err);
@@ -539,7 +565,7 @@
             try {
                 GM_cookie && GM_cookie('list', {name: 'BDUSS'}, (cookies, error) => {
                     if (!error) {
-                        base.setStorage("baiduyunPlugin_BDUSS", JSON.stringify({BDUSS: cookies[0].value}));
+                        base.setStorage("baiduyunPlugin_BDUSS", {BDUSS: cookies[0].value});
                     }
                 });
             } catch (e) {
@@ -548,7 +574,7 @@
 
         getBDUSS() {
             let baiduyunPlugin_BDUSS = base.getStorage('baiduyunPlugin_BDUSS') ? base.getStorage('baiduyunPlugin_BDUSS') : '{"baiduyunPlugin_BDUSS":""}';
-            return JSON.parse(baiduyunPlugin_BDUSS).BDUSS || '';
+            return baiduyunPlugin_BDUSS.BDUSS || '';
         },
 
         convertLinkToAria(link, filename, ua) {
@@ -798,7 +824,7 @@
                         let dialog = await Swal.fire({
                             toast: true,
                             icon: 'info',
-                            title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉在<span class="tag-danger">[我的网盘]</span>中下载！`,
+                            title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉前往<span class="tag-danger">[我的网盘]</span>中下载！`,
                             showConfirmButton: true,
                             confirmButtonText: '点击保存',
                             position: 'top',
@@ -945,7 +971,7 @@
             try {
                 return require('system-core:context/context.js').instanceForSystem.list.getSelected();
             } catch (e) {
-                return document.querySelector('.nd-main-list').__vue__.selectedList;
+                return document.querySelector('.wp-s-core-pan').__vue__.selectedList;
             }
         },
 
@@ -1084,7 +1110,7 @@
         },
 
         async getRealLink(d, f) {
-            let authorization = `${JSON.parse(base.getStorage('token')).token_type} ${JSON.parse(base.getStorage('token')).access_token}`;
+            let authorization = `${base.getStorage('token').token_type} ${base.getStorage('token').access_token}`;
             let res = await base.post(pan.pcs[1], {
                 drive_id: d,
                 file_id: f
@@ -1178,8 +1204,8 @@
                     return message.error('提示：单次最多可勾选 20 个文件！');
                 }
                 try {
-                    let authorization = `${JSON.parse(base.getStorage('token')).token_type} ${JSON.parse(base.getStorage('token')).access_token}`;
-                    let xShareToken = JSON.parse(base.getStorage('shareToken')).share_token;
+                    let authorization = `${base.getStorage('token').token_type} ${base.getStorage('token').access_token}`;
+                    let xShareToken = base.getStorage('shareToken').share_token;
 
                     for (let i = 0; i < selectList.length; i++) {
                         let res = await base.post(pan.pcs[0], {
@@ -1363,24 +1389,18 @@
     };
 
     let tianyi = {
-        err: {
-            toLarge: '此文件超过 1GB，暂不支持下载！',
-        },
 
         convertLinkToAria(link, filename, ua) {
-            if (link === this.err.toLarge) return encodeURIComponent(link);
             filename = filename.replace(' ', '_');
             return encodeURIComponent(`aria2c "${link}" --out "${filename}"`);
         },
 
         convertLinkToBC(link, filename, ua) {
-            if (link === this.err.toLarge) return encodeURIComponent(link);
             let bc = `AA/${encodeURIComponent(filename)}/?url=${encodeURIComponent(link)}ZZ`;
             return encodeURIComponent(`bc://http/${base.e(bc)}`);
         },
 
         convertLinkToCurl(link, filename, ua) {
-            if (link === this.err.toLarge) return encodeURIComponent(link);
             let terminal = base.getValue('setting_terminal_type');
             filename = filename.replace(' ', '_');
             return encodeURIComponent(`${terminal !== 'wp' ? 'curl' : 'curl.exe'} -L "${link}" --output "${filename}"`);
@@ -1483,6 +1503,64 @@
             $button.click(() => base.initDialog());
         },
 
+        async getToken() {
+            let res = await base.getFinalUrl(pan.pcs[1], {});
+            let accessToken = res.match(/accessToken=(\w+)/)?.[1];
+            accessToken && base.setStorage('accessToken', accessToken);
+            return accessToken;
+        },
+
+        async getFileUrlByOnce(item, index, token) {
+            try {
+                if (item.downloadUrl) return {
+                    index,
+                    downloadUrl: item.downloadUrl
+                };
+                let time = Date.now(),
+                    fileId = item.fileId,
+                    o = "AccessToken=" + token + "&Timestamp=" + time + "&fileId=" + fileId,
+                    url = pan.pcs[2] + '?fileId=' + fileId;
+                if (item.shareId) {
+                    o = "AccessToken=" + token + "&Timestamp=" + time + "&dt=1&fileId=" + fileId + "&shareId=" + item.shareId;
+                    url += '&dt=1&shareId=' + item.shareId;
+                }
+                let sign = md5(o).toString();
+                let res = await base.get(url, {
+                    "accept": "application/json;charset=UTF-8",
+                    "sign-type": 1,
+                    "accesstoken": token,
+                    "timestamp": time,
+                    "signature": sign
+                });
+                if (res.res_code === 0) {
+                    return {
+                        index,
+                        downloadUrl: res.fileDownloadUrl
+                    };
+                } else if (res.errorCode === 'InvalidSessionKey') {
+                    return {
+                        index,
+                        downloadUrl: '提示：请先登录网盘！'
+                    };
+                } else if (res.res_code === 'ShareNotFoundFlatDir') {
+                    return {
+                        index,
+                        downloadUrl: '提示：请先[转存]文件，👉前往[我的网盘]中下载！'
+                    };
+                } else {
+                    return {
+                        index,
+                        downloadUrl: '获取下载地址失败，请刷新重试！'
+                    };
+                }
+            } catch (e) {
+                return {
+                    index,
+                    downloadUrl: '获取下载地址失败，请刷新重试！'
+                };
+            }
+        },
+
         async getPCSLink() {
             selectList = this.getSelectedList();
             if (selectList.length === 0) {
@@ -1491,36 +1569,20 @@
             if (this.isOnlyFolder()) {
                 return message.error('提示：请打开文件夹后勾选文件！');
             }
-            if (selectList.length > 20) {
-                return message.error('提示：单次最多可勾选 20 个文件！');
+            let token = base.getStorage('accessToken') || await this.getToken();
+            if (!token) {
+                return message.error('提示：请先登录网盘！');
             }
-            for (let i = 0; i < selectList.length; i++) {
-                let item = selectList[i];
-                if (!item.downloadUrl && !item.isFolder) {
-                    if (item.size >= 1024 * 1024 * 1024 || item.fileSize >= 1024 * 1024 * 1024) {
-                        selectList[i].downloadUrl = this.err.toLarge;
-                        continue;
-                    }
-                    let query = `?fileId=${item.fileId}&dt=1`;
-                    if (item.shareId) {
-                        query += `&shareId=${item.shareId}`;
-                    }
-                    try {
-                        let res = await base.get(pan.pcs[0] + query, {
-                            accept: "application/json;charset=UTF-8"
-                        });
-                        if (res.fileDownloadUrl) {
-                            selectList[i].downloadUrl = res.fileDownloadUrl;
-                        } else if (res.errorCode === 'InvalidSessionKey') {
-                            return message.error('提示：请先登录网盘！');
-                        } else {
-                            return message.error('提示：未知错误');
-                        }
-                    } catch (e) {
-                        return message.error('提示：未知错误');
-                    }
-                }
-            }
+            let queue = [];
+            selectList.forEach((item, index) => {
+                queue.push(this.getFileUrlByOnce(item, index, token));
+            });
+
+            const res = await Promise.all(queue);
+            res.forEach(val => {
+                selectList[val.index].downloadUrl = val.downloadUrl;
+            });
+
             let html = this.generateDom(selectList);
             this.showMainDialog(pan[mode][0], html, pan[mode][1]);
         },
@@ -1546,9 +1608,6 @@
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
-                        if (decodeURIComponent(alink) !== this.err.toLarge) {
-                            alinkAllText += alink + '\r\n';
-                        }
                         content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
@@ -1566,9 +1625,6 @@
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
-                        if (decodeURIComponent(alink) !== this.err.toLarge) {
-                            alinkAllText += alink + '\r\n';
-                        }
                         content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
@@ -1668,6 +1724,7 @@
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
             pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            this.getToken();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -1798,6 +1855,54 @@
             $button.click(() => base.initDialog());
         },
 
+        getToken() {
+            let credentials = {}, captcha = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                if (/^credentials_/.test(localStorage.key(i))) {
+                    credentials = base.getStorage(localStorage.key(i));
+                    base.setStorage('');
+                }
+                if (/^captcha_[\w]{16}/.test(localStorage.key(i))) {
+                    captcha = base.getStorage(localStorage.key(i));
+                }
+            }
+            let deviceid = /(\w{32})/.exec(base.getStorage('deviceid').split(','))[0];
+            let token = {
+                credentials,
+                captcha,
+                deviceid
+            };
+            return token;
+        },
+
+        async getFileUrlByOnce(item, index, token) {
+            try {
+                if (item.downloadUrl) return {
+                    index,
+                    downloadUrl: item.downloadUrl
+                };
+                let res = await base.get(pan.pcs[0] + item.id, {
+                    'Authorization': `${token.credentials.token_type} ${token.credentials.access_token}`,
+                    'content-type': "application/json",
+                    'x-captcha-token': token.captcha.token,
+                    'x-device-id': token.deviceid,
+                });
+                if (res.web_content_link) {
+                    return {
+                        index,
+                        downloadUrl: res.web_content_link
+                    };
+                } else {
+                    return {
+                        index,
+                        downloadUrl: '获取下载地址失败，请刷新重试！'
+                    };
+                }
+            } catch (e) {
+                return message.error('提示：请先登录网盘后刷新页面！');
+            }
+        },
+
         async getPCSLink() {
             selectList = this.getSelectedList();
             if (selectList.length === 0) {
@@ -1807,35 +1912,15 @@
                 return message.error('提示：请打开文件夹后勾选文件！');
             }
             if (pt === 'home') {
-                if (selectList.length > 20) {
-                    return message.error('提示：单次最多可勾选 20 个文件！');
-                }
-                try {
-                    let credentials = {}, captcha = {};
-                    for (let i = 0; i < localStorage.length; i++) {
-                        if (/^credentials_/.test(localStorage.key(i))) {
-                            credentials = JSON.parse(base.getStorage(localStorage.key(i)));
-                        }
-                        if (/^captcha_[\w]{16}/.test(localStorage.key(i))) {
-                            captcha = JSON.parse(base.getStorage(localStorage.key(i)));
-                        }
-                    }
-                    let deviceid = /(\w{32})/.exec(base.getStorage('deviceid').split(','))[0];
-
-                    for (let i = 0; i < selectList.length; i++) {
-                        let res = await base.get(pan.pcs[0] + selectList[i].id, {
-                            'Authorization': `${credentials.token_type} ${credentials.access_token}`,
-                            'content-type': "application/json",
-                            'x-captcha-token': captcha.token,
-                            'x-device-id': deviceid,
-                        });
-                        if (res.web_content_link) {
-                            selectList[i].downloadUrl = res.web_content_link;
-                        }
-                    }
-                } catch (e) {
-                    return message.error('提示：请先登录网盘后刷新页面！');
-                }
+                let queue = [];
+                let token = this.getToken();
+                selectList.forEach((item, index) => {
+                    queue.push(this.getFileUrlByOnce(item, index, token));
+                });
+                const res = await Promise.all(queue);
+                res.forEach(val => {
+                    selectList[val.index].downloadUrl = val.downloadUrl;
+                });
             } else {
                 return message.error('提示：请转存到自己网盘后去网盘主页下载！');
             }
