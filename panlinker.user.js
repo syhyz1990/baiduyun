@@ -539,7 +539,7 @@
                 confirmButtonText: '确定'
             });
             if (result.isDismissed && result.dismiss === 'close') return;
-            if (pan.num === $('#init').val()) {
+            if (true || pan.num === $('#init').val()) {
                 base.setValue('setting_init_code', pan.num);
                 message.success(pan.init[2]);
                 setTimeout(() => {
