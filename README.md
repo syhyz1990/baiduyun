@@ -88,10 +88,10 @@
 
 ## 💽 安装助手
 
-请确保已先安装 [Tampermonkey](http://pan.youxiaohou.com/down) 脚本管理器
+请确保已先安装 [Tampermonkey](https://www.crxsoso.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo) 脚本管理器
 
 - **[安装地址（推荐）](https://www.youxiaohou.com/install.html)**
 
 ## 📝 更新日志
 
-- [点击查看](https://www.baiduyun.wiki/install.html#📝-更新日志)
+- [点击查看](https://www.youxiaohou.com/install.html#%F0%9F%93%9D-%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97)
