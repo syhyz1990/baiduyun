@@ -95,15 +95,3 @@
 ## 📝 更新日志
 
 - [点击查看](https://www.baiduyun.wiki/install.html#📝-更新日志)
-
-## 🚀 速度测试
-
-超级会员使用不同下载软件的速度测试：
-
-| [IDM 百度网盘](http://pan.youxiaohou.com/down)  | [IDM 阿里云盘](http://pan.youxiaohou.com/down) |
-|:-------------------------------------------------:|:-----------------------------------------------:|
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/5fPhsmidwInJrvq.gif)  | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011659864.gif)         |
-| [XDown 百度网盘](http://pan.youxiaohou.com/down) | [XDown 阿里云盘](http://pan.youxiaohou.com/down) |
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/Sp7J2xTlBgLhdNQ.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011735743.gif) |
-| [Motrix 百度网盘](http://pan.youxiaohou.com/down) | [Motrix 阿里云盘](http://pan.youxiaohou.com/down)  |
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/dH5c2sLtCVjfrUm.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011743905.gif) |
