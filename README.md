@@ -52,7 +52,7 @@
 
 **建议配合网盘超级会员使用**
 
-支持下面四大网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`
+支持下面六大网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`, `移动云盘`
 
 ## 🎨 助手界面
 
@@ -64,6 +64,10 @@
 |:---:|:---:|
 | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/09202ae1-beab-4ff9-9c35-cd45462c08d6.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/1f620519-23c6-4cfb-9f54-b98ef4f01d11.gif)  |
 
+| 天翼云盘 | 迅雷云盘 |
+|:---:|:---:|
+| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/ecee5171-5860-4a29-975f-8a5fa1c86f94.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/d8cfc7d6-dada-4a60-8983-1b0da150389d.gif)  |
+
 ## 📖 使用教程
 
 - **[Windows平台使用教程](https://www.youxiaohou.com/zh-cn/windows/)**
@@ -74,7 +78,7 @@
 
 ## 🔧 插件功能
 
-- ✅ 支持多种网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`
+- ✅ 支持多种网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`, `移动云盘`
 - ✅ 支持多种操作系统：Windows，Linux，Mac
 - ✅ 支持多种下载协议：HTTP，JSON-RPC，cURL
 - ✅ 支持多种下载器：IDM，XDown，Aria2，NDM，Motrix，终端
