@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           6.0.0
+// @version           6.0.2
 // @author            YouXiaoHou
-// @description       👆👆👆👆👆👆👆 - 获取 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 ✅夸克网盘 ✅移动云盘 六大网盘的直链下载地址，配合 IDM，Xdown，Aria2，Curl，比特彗星等工具高速🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ 等 18 种浏览器，可在无法安装客户端的环境下使用，助手免费开源。😎
+// @description       👆👆👆👆👆👆👆 - 支持批量获取 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 ✅夸克网盘 ✅移动云盘 六大网盘的直链下载地址，配合 IDM，Xdown，Aria2，Curl，比特彗星等工具高效🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ，搜狗，百分，遨游，星愿，Opera，猎豹，Vivaldi，Yandex，Kiwi 等 18 种浏览器。可在无法安装客户端的环境下使用，助手免费开源。😎
 // @license           AGPL-3.0-or-later
 // @homepage          https://www.youxiaohou.com/install.html
 // @supportURL        https://github.com/syhyz1990/baiduyun
@@ -933,7 +933,7 @@
                     if (typeof (alink) === 'object') {
                         content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link pl-a" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
+                                <a class="pl-item-link pl-a" target="_blank" href="${alink.link}" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
                         alinkAllText += alink + '\r\n';
                         content += `<div class="pl-item">
@@ -951,7 +951,7 @@
                     if (typeof (alink) === 'object') {
                         content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link pl-a" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
+                                <a class="pl-item-link pl-a" target="_blank" href="${alink.link}" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
                     } else {
                         alinkAllText += alink + '\r\n';
                         content += `<div class="pl-item">
@@ -961,9 +961,17 @@
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, pan.ua);
-                    content += `<div class="pl-item">
+                    console.log(alink);
+                    if (typeof (alink) === 'object') {
+                        content += `<div class="pl-item">
+                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
+                                <a class="pl-item-link pl-a" target="_blank" href="${alink.link}" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
+                    } else {
+                        content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link pl-a" href="${decodeURIComponent(alink)}" title="点击用比特彗星下载" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
+                    }
+
                 }
             });
             content += '</div>';
@@ -1288,16 +1296,10 @@
                 }
                 if (mode === 'aria') {
                     let alink = this.convertLinkToAria(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
@@ -1306,16 +1308,10 @@
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, navigator.userAgent);
@@ -1643,16 +1639,10 @@
                 }
                 if (mode === 'aria') {
                     let alink = this.convertLinkToAria(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
@@ -1661,16 +1651,10 @@
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, navigator.userAgent);
@@ -1987,16 +1971,10 @@
                 }
                 if (mode === 'aria') {
                     let alink = this.convertLinkToAria(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
@@ -2005,16 +1983,10 @@
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, navigator.userAgent);
@@ -2294,16 +2266,10 @@
                 }
                 if (mode === 'aria') {
                     let alink = this.convertLinkToAria(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
@@ -2312,16 +2278,10 @@
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, navigator.userAgent);
@@ -2698,16 +2658,10 @@
                 }
                 if (mode === 'aria') {
                     let alink = this.convertLinkToAria(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制aria2c链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'rpc') {
                     content += `<div class="pl-item">
@@ -2716,16 +2670,10 @@
                 }
                 if (mode === 'curl') {
                     let alink = this.convertLinkToCurl(dlink, filename, navigator.userAgent);
-                    if (typeof (alink) === 'object') {
-                        content += `<div class="pl-item">
-                                <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
-                                <a class="pl-item-link" target="_blank" href="${alink.link}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink.link}">${decodeURIComponent(alink.text)}</a> </div>`;
-                    } else {
-                        alinkAllText += alink + '\r\n';
-                        content += `<div class="pl-item">
+                    alinkAllText += alink + '\r\n';
+                    content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-aria" href="${alink}" title="点击复制curl链接" data-filename="${filename}" data-link="${alink}">${decodeURIComponent(alink)}</a> </div>`;
-                    }
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, navigator.userAgent);
