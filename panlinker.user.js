@@ -210,6 +210,13 @@
             if (this.isType(data) === 'object') {
                 data = JSON.stringify(data);
             }
+            if (url.indexOf('quark.cn') > -1) {
+                url = url + (url.indexOf('?') > -1 ? '&' : '?') + 'sys=darwin&ve=2.5.20';
+                headers = {
+                    ...headers,
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) quark-cloud-drive/2.5.20 Chrome/100.0.4896.160 Electron/'
+                }
+            }
             return new Promise((resolve, reject) => {
                 GM_xmlhttpRequest({
                     method: "POST", url, headers, data,
