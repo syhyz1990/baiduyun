@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           6.0.2
+// @version           6.1.1
 // @author            YouXiaoHou
 // @description       👆👆👆👆👆👆👆 - 支持批量获取 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 ✅夸克网盘 ✅移动云盘 六大网盘的直链下载地址，配合 IDM，Xdown，Aria2，Curl，比特彗星等工具高效🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ，搜狗，百分，遨游，星愿，Opera，猎豹，Vivaldi，Yandex，Kiwi 等 18 种浏览器。可在无法安装客户端的环境下使用，助手免费开源。😎
 // @license           AGPL-3.0-or-later
@@ -270,6 +270,23 @@
             });
         },
 
+        stringify(obj) {
+            let str = '';
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    var value = obj[key];
+                    if (Array.isArray(value)) {
+                        for (var i = 0; i < value.length; i++) {
+                            str += encodeURIComponent(key) + '=' + encodeURIComponent(value[i]) + '&';
+                        }
+                    } else {
+                        str += encodeURIComponent(key) + '=' + encodeURIComponent(value) + '&';
+                    }
+                }
+            }
+            return str.slice(0, -1); // 去掉末尾的 "&"
+        },
+
         addStyle(id, tag, css) {
             tag = tag || 'style';
             let doc = document, styleDom = doc.getElementById(id);
@@ -536,6 +553,7 @@
             .pl-loading-box div { box-sizing: content-box; }
             .swal2-container { z-index:100000!important; }
             body.swal2-height-auto { height: inherit!important; }
+            .btn-operate .btn-main { display:flex; align-items:center; }
             `;
             this.addStyle('panlinker-style', 'style', css);
         },
@@ -833,7 +851,34 @@
             $button.click(() => base.initDialog());
         },
 
-        async getPCSLink() {
+        async getToken() {
+            let res = await base.getFinalUrl(pan.pcs[3]);
+            if (res.indexOf('access_token') === -1) {
+                let html = await base.get(pan.pcs[3], {}, 'text');
+                let bdstoken = html.match(/name="bdstoken"\s+value="([^"]+)"/)?.[1];
+                let client_id = html.match(/name="client_id"\s+value="([^"]+)"/)?.[1];
+                let data = {
+                    grant_permissions_arr: 'netdisk',
+                    bdstoken: bdstoken,
+                    client_id: client_id,
+                    response_type: "token",
+                    display: "page",
+                    grant_permissions: "basic,netdisk"
+                }
+                await base.post(pan.pcs[3], base.stringify(data), {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                })
+                let res2 = await base.getFinalUrl(pan.pcs[3]);
+                let accessToken = res2.match(/access_token=([^&]+)/)?.[1];
+                accessToken && base.setStorage('accessToken', accessToken);
+                return accessToken;
+            }
+            let accessToken = res.match(/access_token=([^&]+)/)?.[1];
+            accessToken && base.setStorage('accessToken', accessToken);
+            return accessToken;
+        },
+
+        async getPCSLink(maxRequestTime = 2) {
             selectList = this.getSelectedList();
             let fidList = this._getFidList(), url, res;
 
@@ -845,7 +890,8 @@
                     return message.error('提示：请打开文件夹后勾选文件！');
                 }
                 fidList = encodeURIComponent(fidList);
-                url = `${pan.pcs[0]}&fsids=${fidList}`;
+                let accessToken = base.getStorage('accessToken') || await this.getToken();
+                url = `${pan.pcs[0]}&fsids=${fidList}&access_token=${accessToken}`;
                 res = await base.get(url, {"User-Agent": pan.ua});
             }
             if (pt === 'share') {
@@ -896,6 +942,14 @@
                 this.showMainDialog(pan[mode][0], html, pan[mode][1]);
             } else if (res.errno === 112) {
                 return message.error('提示：页面过期，请刷新重试！');
+            } else if (res.errno === 9019) {
+                maxRequestTime--;
+                await this.getToken();
+                if (maxRequestTime > 0) {
+                    await this.getPCSLink(maxRequestTime);
+                } else {
+                    message.error('提示：获取下载链接失败！请刷新网页后重试！');
+                }
             } else {
                 message.error('提示：获取下载链接失败！请刷新网页后重试！');
             }
@@ -1125,6 +1179,10 @@
                 d.href = href;
                 d.dispatchEvent(new MouseEvent("click"));
             });
+            doc.on('click', '.listener-link-api-btn', async (e) => {
+                base.setClipboard(e.target.dataset.filename);
+                $(e.target).text('复制成功').animate({opacity: '0.5'}, "slow");
+            });
             doc.on('click', '.listener-link-aria, .listener-copy-all', (e) => {
                 e.preventDefault();
                 base.setClipboard(decodeURIComponent(e.target.dataset.link));
@@ -1228,7 +1286,7 @@
         },
 
         async getPCSLink() {
-            let reactDomGrid = document.getElementsByClassName(pan.dom.grid)[0];
+            let reactDomGrid = document.querySelector(pan.dom.grid);
             if (reactDomGrid) {
                 let res = await Swal.fire({
                     title: '提示',
@@ -1236,7 +1294,7 @@
                     confirmButtonText: '点击切换'
                 });
                 if (res) {
-                    $('.switch-wrapper--1yEfx').trigger('click');
+                    document.querySelector(pan.dom.switch).click();
                     return message.success('切换成功，请重新获取下载链接！');
                 }
                 return false;
@@ -1292,6 +1350,7 @@
                     content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
                                 <a class="pl-item-link listener-link-api" data-did="${did}" data-fid="${fid}" data-filename="${filename}" data-link="${dlink}" data-index="${i}">${dlink}</a>
+                                <div class="pl-item-btn listener-link-api-btn" data-filename="${filename}">复制文件名</div>
                                 </div>`;
                 }
                 if (mode === 'aria') {
@@ -1364,7 +1423,7 @@
         getSelectedList() {
             try {
                 let selectedList = [];
-                let reactDom = document.getElementsByClassName(pan.dom.list)[0];
+                let reactDom = document.querySelector(pan.dom.list);
                 let reactObj = base.findReact(reactDom, 1);
                 let props = reactObj.pendingProps;
                 if (props) {
@@ -2232,7 +2291,7 @@
             if (pt === 'home') {
                 let res = await base.post(pan.pcs[0], {
                     "fids": fids
-                }, {"content-type": "application/json;charset=utf-8"});
+                }, {"content-type": "application/json;charset=utf-8", "user-agent": pan.ua});
                 if (res.code === 31001) {
                     return message.error('提示：请先登录网盘！');
                 }
