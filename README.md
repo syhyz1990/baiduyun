@@ -52,17 +52,7 @@
 
 **建议配合网盘超级会员使用**
 
-支持下面四大网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`
-
-## 🎨 助手界面
-
-|  百度网盘 |  阿里云盘 |
-|:---:|:---:|
-| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/b64df172-4610-455c-8fbc-d5327753b9da.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/f24a0253-4fbc-4b51-8dba-b96efa92f5e8.gif)  |
-
-| 天翼云盘 | 迅雷云盘 |
-|:---:|:---:|
-| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/09202ae1-beab-4ff9-9c35-cd45462c08d6.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/1f620519-23c6-4cfb-9f54-b98ef4f01d11.gif)  |
+支持下面六大网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`, `移动云盘`
 
 ## 📖 使用教程
 
@@ -74,7 +64,7 @@
 
 ## 🔧 插件功能
 
-- ✅ 支持多种网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`
+- ✅ 支持多种网盘：`百度网盘`, `阿里云盘`, `天翼云盘`, `迅雷云盘`, `夸克网盘`, `移动云盘`
 - ✅ 支持多种操作系统：Windows，Linux，Mac
 - ✅ 支持多种下载协议：HTTP，JSON-RPC，cURL
 - ✅ 支持多种下载器：IDM，XDown，Aria2，NDM，Motrix，终端
@@ -84,22 +74,24 @@
 
 ## 💽 安装助手
 
-请确保已先安装 [Tampermonkey](http://pan.youxiaohou.com/down) 脚本管理器
+请确保已先安装 [Tampermonkey](https://www.crxsoso.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo) 脚本管理器
 
 - **[安装地址（推荐）](https://www.youxiaohou.com/install.html)**
 
+## 🎨 助手界面
+
+|  百度网盘 |  阿里云盘 |
+|:---:|:---:|
+| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/b64df172-4610-455c-8fbc-d5327753b9da.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/f24a0253-4fbc-4b51-8dba-b96efa92f5e8.gif)  |
+
+| 天翼云盘 | 迅雷云盘 |
+|:---:|:---:|
+| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/09202ae1-beab-4ff9-9c35-cd45462c08d6.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/1f620519-23c6-4cfb-9f54-b98ef4f01d11.gif)  |
+
+| 天翼云盘 | 迅雷云盘 |
+|:---:|:---:|
+| ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/ecee5171-5860-4a29-975f-8a5fa1c86f94.gif)  | ![](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-0d8c17ea-3b18-45d5-bf2f-64e5c812dfc9/d8cfc7d6-dada-4a60-8983-1b0da150389d.gif)  |
+
 ## 📝 更新日志
 
-- [点击查看](https://www.baiduyun.wiki/install.html#📝-更新日志)
-
-## 🚀 速度测试
-
-超级会员使用不同下载软件的速度测试：
-
-| [IDM 百度网盘](http://pan.youxiaohou.com/down)  | [IDM 阿里云盘](http://pan.youxiaohou.com/down) |
-|:-------------------------------------------------:|:-----------------------------------------------:|
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/5fPhsmidwInJrvq.gif)  | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011659864.gif)         |
-| [XDown 百度网盘](http://pan.youxiaohou.com/down) | [XDown 阿里云盘](http://pan.youxiaohou.com/down) |
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/Sp7J2xTlBgLhdNQ.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011735743.gif) |
-| [Motrix 百度网盘](http://pan.youxiaohou.com/down) | [Motrix 阿里云盘](http://pan.youxiaohou.com/down)  |
-| ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/dH5c2sLtCVjfrUm.gif) | ![](https://cdn.jsdelivr.net/gh/youxiaohou/img/202112011743905.gif) |
+- [点击查看](https://www.youxiaohou.com/install.html#%F0%9F%93%9D-%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97)
