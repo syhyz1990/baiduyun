@@ -2099,7 +2099,7 @@
 
         getSelectedList() {
             try {
-                let doms = document.querySelectorAll('.pan-list-item');
+                let doms = document.querySelectorAll('li[class*="SourceListItem__item--"]');
                 let selectedList = [];
                 for (let dom of doms) {
                     let domVue = dom.__vue__;
