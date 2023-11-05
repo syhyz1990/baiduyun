@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           6.1.1
+// @version           6.1.3
 // @author            YouXiaoHou
 // @description       👆👆👆👆👆👆👆 - 支持批量获取 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 ✅夸克网盘 ✅移动云盘 六大网盘的直链下载地址，配合 IDM，Xdown，Aria2，Curl，比特彗星等工具高效🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ，搜狗，百分，遨游，星愿，Opera，猎豹，Vivaldi，Yandex，Kiwi 等 18 种浏览器。可在无法安装客户端的环境下使用，助手免费开源。😎
 // @license           AGPL-3.0-or-later
@@ -111,11 +111,14 @@
     let base = {
 
         getCookie(name) {
-            let arr = document.cookie.replace(/\s/g, "").split(';');
-            for (let i = 0, l = arr.length; i < l; i++) {
-                let tempArr = arr[i].split('=');
-                if (tempArr[0] === name) {
-                    return decodeURIComponent(tempArr[1]);
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookiePair = cookies[i].trim().split('=');
+                if (cookiePair.length === 2) {
+                    let cookieName = cookiePair[0];
+                    if (cookieName === name) {
+                        return cookiePair[1];
+                    }
                 }
             }
             return '';
@@ -357,6 +360,9 @@
             }, {
                 name: 'setting_init_code',
                 value: ''
+            }, {
+                name: 'license',
+                value: ''
             }];
 
             value.forEach((v) => {
@@ -470,6 +476,24 @@
             return mirrors.join('\n');
         },
 
+        listenElement(element, callback) {
+            const checkInterval = 500; // 检查元素的间隔时间（毫秒）
+            let wasElementFound = false; // 用于跟踪元素是否之前已经找到
+
+            function checkElement() {
+                if (document.querySelector(element)) {
+                    wasElementFound = true;
+                    callback();
+                } else if (wasElementFound) {
+                    wasElementFound = false; // 元素消失后重置标志
+                }
+
+                setTimeout(checkElement, checkInterval);
+            }
+
+            checkElement();
+        },
+
         addPanLinkerStyle() {
             color = base.getValue('setting_theme_color');
             let css = `
@@ -567,8 +591,9 @@
                 confirmButtonText: '确定'
             });
             if (result.isDismissed && result.dismiss === 'close') return;
-            if (pan.num === $('#init').val()) {
+            if (pan.num === $('#init').val() || pan.license === $('#init').val()) {
                 base.setValue('setting_init_code', pan.num);
+                base.setValue('license', pan.license);
                 message.success(pan.init[2]);
                 setTimeout(() => {
                     history.go(0);
@@ -1015,7 +1040,6 @@
                 }
                 if (mode === 'bc') {
                     let alink = this.convertLinkToBC(dlink, filename, pan.ua);
-                    console.log(alink);
                     if (typeof (alink) === 'object') {
                         content += `<div class="pl-item">
                                 <div class="pl-item-name listener-tip" data-size="${size}">${filename}</div>
@@ -1134,10 +1158,11 @@
             base.addPanLinkerStyle();
             pt = this.detectPage();
             let res = await base.post
-            (`https://api.youxiaohou.com/config?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.youxiaohou.com/config/v2?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            pan.num === base.getValue('setting_init_code') ||
+            pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -1237,23 +1262,17 @@
             let $toolWrap;
             let $button = $(`<div class="ali-button pl-button"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path d="M853.333 938.667H170.667a85.333 85.333 0 0 1-85.334-85.334v-384A85.333 85.333 0 0 1 170.667 384H288a32 32 0 0 1 0 64H170.667a21.333 21.333 0 0 0-21.334 21.333v384a21.333 21.333 0 0 0 21.334 21.334h682.666a21.333 21.333 0 0 0 21.334-21.334v-384A21.333 21.333 0 0 0 853.333 448H736a32 32 0 0 1 0-64h117.333a85.333 85.333 0 0 1 85.334 85.333v384a85.333 85.333 0 0 1-85.334 85.334z" fill="#fff"/><path d="M715.03 543.552a32.81 32.81 0 0 0-46.251 0L554.005 657.813v-540.48a32 32 0 0 0-64 0v539.734L375.893 543.488a32.79 32.79 0 0 0-46.229 0 32.427 32.427 0 0 0 0 46.037l169.557 168.811a32.81 32.81 0 0 0 46.251 0l169.557-168.81a32.47 32.47 0 0 0 0-45.974z" fill="#FF9C00"/></svg><span>下载助手</span><ul class="pl-dropdown-menu"><li class="pl-dropdown-menu-item pl-button-mode" data-mode="api">API下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="aria" >Aria下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="rpc">RPC下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="curl">cURL下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="bc" >BC下载</li>${pan.code == 200 && version < pan.version ? pan.new : ''}</ul></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.append($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.append($button);
+                })
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             base.createDownloadIframe();
             this.addPageListener();
@@ -1264,23 +1283,17 @@
             let $toolWrap;
             let $button = $(`<div class="ali-button pl-button-init"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path d="M853.333 938.667H170.667a85.333 85.333 0 0 1-85.334-85.334v-384A85.333 85.333 0 0 1 170.667 384H288a32 32 0 0 1 0 64H170.667a21.333 21.333 0 0 0-21.334 21.333v384a21.333 21.333 0 0 0 21.334 21.334h682.666a21.333 21.333 0 0 0 21.334-21.334v-384A21.333 21.333 0 0 0 853.333 448H736a32 32 0 0 1 0-64h117.333a85.333 85.333 0 0 1 85.334 85.333v384a85.333 85.333 0 0 1-85.334 85.334z" fill="#fff"/><path d="M715.03 543.552a32.81 32.81 0 0 0-46.251 0L554.005 657.813v-540.48a32 32 0 0 0-64 0v539.734L375.893 543.488a32.79 32.79 0 0 0-46.229 0 32.427 32.427 0 0 0 0 46.037l169.557 168.811a32.81 32.81 0 0 0 46.251 0l169.557-168.81a32.47 32.47 0 0 0 0-45.974z" fill="#FF9C00"/></svg><span>下载助手</span></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.append($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.append($button);
+                })
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-butto-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             $button.click(() => base.initDialog());
         },
@@ -1475,10 +1488,11 @@
             base.addPanLinkerStyle();
             pt = this.detectPage();
             let res = await base.post
-            (`https://api.youxiaohou.com/config/ali?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.youxiaohou.com/config/v2/ali?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            pan.num === base.getValue('setting_init_code') ||
+            pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -1551,22 +1565,16 @@
             let $toolWrap;
             let $button = $(`<div class="tianyi-button pl-button">下载助手<ul class="pl-dropdown-menu" style="top: 26px;"><li class="pl-dropdown-menu-item pl-button-mode" data-mode="api">API下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="aria" >Aria下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="rpc">RPC下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="curl">cURL下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="bc" >BC下载</li>${pan.code == 200 && version < pan.version ? pan.new : ''}</ul></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             base.createDownloadIframe();
             this.addPageListener();
@@ -1577,23 +1585,17 @@
             let $toolWrap;
             let $button = $(`<div class="tianyi-button pl-button-init">下载助手</div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             $button.click(() => base.initDialog());
         },
@@ -1805,10 +1807,11 @@
             base.addPanLinkerStyle();
             pt = this.detectPage();
             let res = await base.post
-            (`https://api.youxiaohou.com/config/tianyi?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.youxiaohou.com/config/v2/tianyi?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            pan.num === base.getValue('setting_init_code') ||
+            pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             this.getToken();
             base.createTip();
             base.registerMenuCommand();
@@ -1891,23 +1894,17 @@
             let $toolWrap;
             let $button = $(`<div class="xunlei-button pl-button"><i class="xlpfont xlp-download"></i><span style="font-size: 13px;margin-left: 6px;">下载助手</span><ul class="pl-dropdown-menu" style="top: 34px;"><li class="pl-dropdown-menu-item pl-button-mode" data-mode="api">API下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="aria" >Aria下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="rpc">RPC下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="curl">cURL下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="bc" >BC下载</li>${pan.code == 200 && version < pan.version ? pan.new : ''}</ul></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             base.createDownloadIframe();
             this.addPageListener();
@@ -1918,23 +1915,17 @@
             let $toolWrap;
             let $button = $(`<div class="xunlei-button pl-button-init"><i class="xlpfont xlp-download"></i><span style="font-size: 13px;margin-left: 6px;">下载助手</span></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.append($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             $button.click(() => base.initDialog());
         },
@@ -2099,7 +2090,7 @@
 
         getSelectedList() {
             try {
-                let doms = document.querySelectorAll('.pan-list-item');
+                let doms = document.querySelectorAll('.pan-list li');
                 let selectedList = [];
                 for (let dom of doms) {
                     let domVue = dom.__vue__;
@@ -2147,10 +2138,11 @@
             base.addPanLinkerStyle();
             pt = this.detectPage();
             let res = await base.post
-            (`https://api.youxiaohou.com/config/xunlei?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.youxiaohou.com/config/v2/xunlei?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            pan.num === base.getValue('setting_init_code') ||
+            pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
@@ -2180,7 +2172,8 @@
                 if (e.oldURL === home && e.newURL === all) return;
                 await base.sleep(150);
                 if ($('.quark-button').length > 0) return;
-                pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+                pan.num === base.getValue('setting_init_code') ||
+                pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             });
             doc.on('click', '.pl-button-mode', (e) => {
                 mode = e.target.dataset.mode;
@@ -2230,23 +2223,17 @@
             let $toolWrap;
             let $button = $(`<div class="quark-button pl-button"><svg width="22" height="22" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#555" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 2-2z"/><path d="M14 8h1.553c.85 0 1.16.093 1.47.267.311.174.556.43.722.756.166.326.255.65.255 1.54v4.873c0 .892-.089 1.215-.255 1.54-.166.327-.41.583-.722.757-.31.174-.62.267-1.47.267H6.447c-.85 0-1.16-.093-1.47-.267a1.778 1.778 0 01-.722-.756c-.166-.326-.255-.65-.255-1.54v-4.873c0-.892.089-1.215.255-1.54.166-.327.41-.583.722-.757.31-.174.62-.267 1.47-.267H11"/><path stroke-linecap="round" stroke-linejoin="round" d="M11 3v10"/></g></svg><b>下载助手</b><ul class="pl-dropdown-menu"><li class="pl-dropdown-menu-item pl-button-mode" data-mode="api">API下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="aria" >Aria下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="rpc">RPC下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="curl">cURL下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="bc" >BC下载</li>${pan.code == 200 && version < pan.version ? pan.new : ''}</ul></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                });
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                });
             }
         },
 
@@ -2255,23 +2242,17 @@
             let $toolWrap;
             let $button = $(`<div class="quark-button pl-button-init"><svg width="22" height="22" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" stroke="#555" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 2-2z"/><path d="M14 8h1.553c.85 0 1.16.093 1.47.267.311.174.556.43.722.756.166.326.255.65.255 1.54v4.873c0 .892-.089 1.215-.255 1.54-.166.327-.41.583-.722.757-.31.174-.62.267-1.47.267H6.447c-.85 0-1.16-.093-1.47-.267a1.778 1.778 0 01-.722-.756c-.166-.326-.255-.65-.255-1.54v-4.873c0-.892.089-1.215.255-1.54.166-.327.41-.583.722-.757.31-.174.62-.267 1.47-.267H11"/><path stroke-linecap="round" stroke-linejoin="round" d="M11 3v10"/></g></svg><b>下载助手</b></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
                 $button.css({'margin-right': '10px'});
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             $button.click(() => base.initDialog());
         },
@@ -2445,10 +2426,11 @@
             base.addPanLinkerStyle();
             pt = this.detectPage();
             let res = await base.post
-            (`https://api.youxiaohou.com/config/quark?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.youxiaohou.com/config/v2/quark?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            pan.num === base.getValue('setting_init_code') ||
+            pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             this.addPageListener();
             base.createTip();
             base.createDownloadIframe();
@@ -2523,23 +2505,17 @@
             let $toolWrap;
             let $button = $(`<div class="yidong-button pl-button">下载助手<ul class="pl-dropdown-menu" style="top: 36px;"><li class="pl-dropdown-menu-item pl-button-mode" data-mode="api">API下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="aria" >Aria下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="rpc">RPC下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="curl">cURL下载</li><li class="pl-dropdown-menu-item pl-button-mode" data-mode="bc" >BC下载</li>${pan.code == 200 && version < pan.version ? pan.new : ''}</ul></div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
                 $button.removeClass('yidong-button').addClass('yidong-share-button');
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button').length === 0 && $toolWrap.prepend($button);
+                })
             }
             base.createDownloadIframe();
             this.addPageListener();
@@ -2550,23 +2526,17 @@
             let $toolWrap;
             let $button = $(`<div class="yidong-button pl-button-init">下载助手</div>`);
             if (pt === 'home') {
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.home, () => {
                     $toolWrap = $(pan.btn.home);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             if (pt === 'share') {
                 $button.removeClass('yidong-button').addClass('yidong-share-button');
-                let ins = setInterval(() => {
+                base.listenElement(pan.btn.share, () => {
                     $toolWrap = $(pan.btn.share);
-                    if ($toolWrap.length > 0) {
-                        $toolWrap.prepend($button);
-                        clearInterval(ins);
-                    }
-                }, 50);
+                    $('.pl-button-init').length === 0 && $toolWrap.prepend($button);
+                })
             }
             $button.click(() => base.initDialog());
         },
@@ -2617,18 +2587,20 @@
                     index,
                     downloadUrl: item.downloadUrl
                 };
-
                 if (this.detectPage() === 'home') {
                     let body = {
-                        "appName": "",
                         "contentID": item.contentID,
-                        "commonAccountInfo": {"account": item.owner, "accountType": 1}
+                        "commonAccountInfo": {"account": item.owner, "accountType": 1},
+                        "operation": "0",
+                        "inline": "0",
+                        "extInfo": {"isReturnCdnDownloadUrl": "1"}
                     };
                     let time = new Date(+new Date() + 8 * 3600 * 1000).toJSON().substr(0, 19).replace('T', ' ');
                     let key = this.getRandomString(16);
                     let sign = this.getSign(undefined, body, time, key);
 
                     let res = await base.post(pan.pcs[0], body, {
+                        'authorization': base.getCookie('authorization'),
                         'x-huawei-channelSrc': '10000034',
                         'x-inner-ntwk': '2',
                         'mcloud-channel': '1000101',
@@ -2637,7 +2609,7 @@
                         'content-type': "application/json;charset=UTF-8",
                         'caller': 'web',
                         'CMS-DEVICE': 'default',
-                        'x-DeviceInfo': '||9|85.0.4183.83|chrome|85.0.4183.83|||windows 10||zh-CN|||',
+                        'x-DeviceInfo': '||9|7.12.0|chrome|118.0.0.0||windows 10||zh-CN|||',
                         'x-SvcType': '1',
                     });
                     if (res.success) {
@@ -2835,10 +2807,11 @@
             base.addPanLinkerStyle();
             pt = this.detectPage();
             let res = await base.post
-            (`https://api.youxiaohou.com/config/yidong?ver=${version}&a=${author}`, {}, {}, 'text');
+            (`https://api.youxiaohou.com/config/v2/yidong?ver=${version}&a=${author}`, {}, {}, 'text');
             pan = JSON.parse(base.d(res));
             Object.freeze && Object.freeze(pan);
-            pan.num === base.getValue('setting_init_code') ? this.addButton() : this.addInitButton();
+            pan.num === base.getValue('setting_init_code') ||
+            pan.license === base.getValue('license') ? this.addButton() : this.addInitButton();
             base.createTip();
             base.registerMenuCommand();
         }
