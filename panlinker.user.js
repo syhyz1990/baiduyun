@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           6.1.3
+// @version           6.1.4
 // @author            YouXiaoHou
 // @description       👆👆👆👆👆👆👆 - 支持批量获取 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 ✅夸克网盘 ✅移动云盘 六大网盘的直链下载地址，配合 IDM，Xdown，Aria2，Curl，比特彗星等工具高效🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ，搜狗，百分，遨游，星愿，Opera，猎豹，Vivaldi，Yandex，Kiwi 等 18 种浏览器。可在无法安装客户端的环境下使用，助手免费开源。😎
 // @license           AGPL-3.0-or-later
@@ -19,6 +19,8 @@
 // @match             *://yun.baidu.com/share/*
 // @match             *://www.aliyundrive.com/s/*
 // @match             *://www.aliyundrive.com/drive*
+// @match             *://www.alipan.com/s/*
+// @match             *://www.alipan.com/drive*
 // @match             *://cloud.189.cn/web/*
 // @match             *://pan.xunlei.com/*
 // @match             *://pan.quark.cn/*
@@ -30,6 +32,7 @@
 // @connect           baidu.com
 // @connect           baidupcs.com
 // @connect           aliyundrive.com
+// @connect           alipan.com
 // @connect           189.cn
 // @connect           xunlei.com
 // @connect           quark.cn
@@ -2822,7 +2825,7 @@
             if (/(pan|yun).baidu.com/.test(location.host)) {
                 baidu.initPanLinker();
             }
-            if (/www.aliyundrive.com/.test(location.host)) {
+            if (/www.(aliyundrive|alipan).com/.test(location.host)) {
                 ali.initPanLinker();
             }
             if (/cloud.189.cn/.test(location.host)) {
