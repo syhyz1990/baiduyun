@@ -26,9 +26,9 @@
 // @match             *://pan.quark.cn/*
 // @match             *://yun.139.com/*
 // @match             *://caiyun.139.com/*
-// @require           https://unpkg.com/jquery@3.6.0/dist/jquery.min.js
-// @require           https://unpkg.com/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
-// @require           https://unpkg.com/js-md5@0.7.3/build/md5.min.js
+// @require           https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js
+// @require           https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
+// @require           https://cdn.jsdelivr.net/npm/js-md5@0.7.3/build/md5.min.js
 // @connect           baidu.com
 // @connect           baidupcs.com
 // @connect           aliyundrive.com
