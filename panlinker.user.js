@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              网盘直链下载助手
 // @namespace         https://github.com/syhyz1990/baiduyun
-// @version           6.1.4
+// @version           6.1.5
 // @author            YouXiaoHou
 // @description       👆👆👆👆👆👆👆 - 支持批量获取 ✅百度网盘 ✅阿里云盘 ✅天翼云盘 ✅迅雷云盘 ✅夸克网盘 ✅移动云盘 六大网盘的直链下载地址，配合 IDM，Xdown，Aria2，Curl，比特彗星等工具高效🚀🚀🚀下载，完美适配 Chrome，Edge，FireFox，360，QQ，搜狗，百分，遨游，星愿，Opera，猎豹，Vivaldi，Yandex，Kiwi 等 18 种浏览器。可在无法安装客户端的环境下使用，助手免费开源。😎
 // @license           AGPL-3.0-or-later
@@ -26,9 +26,9 @@
 // @match             *://pan.quark.cn/*
 // @match             *://yun.139.com/*
 // @match             *://caiyun.139.com/*
-// @require           https://unpkg.com/jquery@3.6.0/dist/jquery.min.js
-// @require           https://unpkg.com/sweetalert2@10.16.6/dist/sweetalert2.all.min.js
-// @require           https://unpkg.com/js-md5@0.7.3/build/md5.min.js
+// @require           https://registry.npmmirror.com/jquery/3.7.0/files/dist/jquery.min.js
+// @require           https://registry.npmmirror.com/sweetalert2/10.16.6/files/dist/sweetalert2.all.min.js
+// @require           https://registry.npmmirror.com/js-md5/0.7.3/files/build/md5.min.js
 // @connect           baidu.com
 // @connect           baidupcs.com
 // @connect           aliyundrive.com
