@@ -1175,18 +1175,18 @@
 
         convertLinkToAria(link, filename, ua) {
             filename = base.fixFilename(filename);
-            return encodeURIComponent(`aria2c "${link}" --out "${filename}" --header "Referer: https://www.aliyundrive.com/"`);
+            return encodeURIComponent(`aria2c "${link}" --out "${filename}" --header "Referer: https://${location.host}/"`);
         },
 
         convertLinkToBC(link, filename, ua) {
-            let bc = `AA/${encodeURIComponent(filename)}/?url=${encodeURIComponent(link)}&refer=${encodeURIComponent('https://www.aliyundrive.com/')}ZZ`;
+            let bc = `AA/${encodeURIComponent(filename)}/?url=${encodeURIComponent(link)}&refer=${encodeURIComponent(`'https://${location.host}/'`)}ZZ`;
             return encodeURIComponent(`bc://http/${base.e(bc)}`);
         },
 
         convertLinkToCurl(link, filename, ua) {
             let terminal = base.getValue('setting_terminal_type');
             filename = base.fixFilename(filename);
-            return encodeURIComponent(`${terminal !== 'wp' ? 'curl' : 'curl.exe'} -L -C - "${link}" -o "${filename}" -e "https://www.aliyundrive.com/"`);
+            return encodeURIComponent(`${terminal !== 'wp' ? 'curl' : 'curl.exe'} -L -C - "${link}" -o "${filename}" -e "https://${location.host}/"`);
         },
 
         addPageListener() {
@@ -1424,11 +1424,11 @@
                 params: [`token:${rpc.token}`, [link], {
                     dir: rpc.dir,
                     out: filename,
-                    header: [`Referer: https://www.aliyundrive.com/`]
+                    header: [`Referer: https://${location.host}/`]
                 }]
             };
             try {
-                let res = await base.post(url, rpcData, {"Referer": "https://www.aliyundrive.com/"}, '');
+                let res = await base.post(url, rpcData, {"Referer": `"https://${location.host}/"`}, '');
                 if (res.result) return 'success';
                 return 'fail';
             } catch (e) {
