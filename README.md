@@ -88,7 +88,7 @@
 |:---:|:---:|
 | ![](https://pic.rmb.bdstatic.com/bjh/e95e1fd01ceb3df999c4b088a1edb7f18839.gif)  | ![](https://pic.rmb.bdstatic.com/bjh/1b7300f5a8d7f6bcea3da07fd2abf1654434.gif)  |
 
-| 天翼云盘 | 迅雷云盘 |
+| 夸克网盘 | 移动云盘 |
 |:---:|:---:|
 | ![](https://pic.rmb.bdstatic.com/bjh/938883c3ddf5421d580199b60b1546733824.gif)  | ![](https://pic.rmb.bdstatic.com/bjh/d493cddb5a1cdc3dbe5369304bfa2353763.gif)  |
 
