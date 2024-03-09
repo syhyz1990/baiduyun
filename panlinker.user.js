@@ -630,10 +630,11 @@
 
         _getFidList() {
             let fidlist = [];
-            selectList.forEach(v => {
-                if (+v.isdir === 1) return;
-                fidlist.push(v.fs_id);
-            });
+            for (const v of selectList) {
+                if (+v.isdir !== 1) {
+                    fidlist.push(v.fs_id);
+                }
+            }
             return '[' + fidlist + ']';
         },
 
@@ -1102,7 +1103,7 @@
             try {
                 return require('system-core:context/context.js').instanceForSystem.list.getSelected();
             } catch (e) {
-                return document.querySelector('.wp-s-core-pan').__vue__.selectedList;
+                return unsafeWindow.document.querySelector('.wp-s-core-pan').__vue__.selectedList;
             }
         },
 
