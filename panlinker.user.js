@@ -976,18 +976,22 @@
             if (pt === 'share') {
                 this.getShareData();
                 if (!params.bdstoken) {
+                    Swal.close();
                     return message.error('提示：请先登录网盘！');
                 }
                 if (selectList.length === 0) {
+                    Swal.close();
                     return message.error('提示：请先勾选要下载的文件！');
                 }
                 if (fidList.length === 2) {
+                    Swal.close();
                     return message.error('提示：请打开文件夹后勾选文件！');
                 }
+                // 百度网盘分享页 API 强制要求登录态（需要 bdstoken），无法免登录获取下载链接
                 let dialog = await Swal.fire({
                     toast: true,
                     icon: 'info',
-                    title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉前往<span class="tag-danger">[我的网盘]</span>中下载！`,
+                    title: `提示：百度网盘分享页需要<span class="tag-danger">[登录]</span>后才能获取下载链接。请先将文件<span class="tag-danger">[保存到网盘]</span>，然后前往<span class="tag-danger">[我的网盘]</span>中下载！`,
                     showConfirmButton: true,
                     confirmButtonText: '点击保存',
                     position: 'top',
@@ -2094,9 +2098,11 @@
         async getPCSLink() {
             selectList = this.getSelectedList();
             if (selectList.length === 0) {
+                Swal.close();
                 return message.error('提示：请先勾选要下载的文件！');
             }
             if (this.isOnlyFolder()) {
+                Swal.close();
                 return message.error('提示：请打开文件夹后勾选文件！');
             }
             if (pt === 'home') {
@@ -2110,18 +2116,25 @@
                     selectList[val.index].downloadUrl = val.downloadUrl;
                 });
             } else {
+                // 迅雷云盘分享页 API 强制要求登录态，无法免登录获取下载链接
+                Swal.close();
                 let dialog = await Swal.fire({
                     toast: true,
                     icon: 'info',
-                    title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉前往<span class="tag-danger">[我的网盘]</span>中下载！`,
+                    title: `提示：迅雷云盘分享页需要<span class="tag-danger">[登录]</span>后才能获取下载链接。请先将文件<span class="tag-danger">[保存到网盘]</span>，然后前往<span class="tag-danger">[我的网盘]</span>中下载！`,
                     showConfirmButton: true,
                     confirmButtonText: '点击保存',
                     position: 'top',
                 });
                 if (dialog.isConfirmed) {
-                    document.querySelector('.saveToCloud').click();
-                    return;
+                    let saveBtn = document.querySelector('.saveToCloud');
+                    if (saveBtn) {
+                        saveBtn.click();
+                    } else {
+                        message.warning('提示：未找到保存按钮，请手动保存文件到网盘！');
+                    }
                 }
+                return;
             }
             let html = this.generateDom(selectList);
             this.showMainDialog(pan[mode][0], html, pan[mode][1]);
@@ -2419,23 +2432,89 @@
                 let html = this.generateDom(res.data);
                 this.showMainDialog(pan[mode][0], html, pan[mode][1]);
             } else {
-                Swal.close();
-                let dialog = await Swal.fire({
-                    toast: true,
-                    icon: 'info',
-                    title: `提示：请将文件<span class="tag-danger">[保存到网盘]</span>👉前往<span class="tag-danger">[我的网盘]</span>中下载！`,
-                    showConfirmButton: true,
-                    confirmButtonText: '点击保存',
-                    position: 'top',
-                });
-                if (dialog.isConfirmed) {
-                    let saveBtn = document.querySelector('.file-info_r');
-                    if (saveBtn) {
-                        saveBtn.click();
-                    } else {
-                        message.warning('提示：未找到保存按钮，请手动保存文件到网盘！');
+                // 分享页：通过分享 API 直接获取下载链接
+                try {
+                    // 从 URL 提取 shareKey
+                    let shareKey = location.pathname.replace(/^\/s\//, '').split('/')[0] || '';
+                    if (!shareKey) {
+                        Swal.close();
+                        return message.error('提示：无法从链接中提取分享标识，请检查链接格式！');
                     }
-                    return;
+
+                    // 调用分享页 API 获取 shareToken 和 shareId
+                    let sharePageRes = await base.post('https://pan.quark.cn/share/sharepage/get', {
+                        "shareKey": shareKey,
+                        "pwd": "",
+                        "page": 1,
+                        "limit": 100,
+                        "share_pwd": "",
+                        "parent_file_id": 0
+                    }, {"content-type": "application/json;charset=utf-8", "user-agent": pan.ua});
+
+                    if (!sharePageRes || sharePageRes.code !== 0) {
+                        Swal.close();
+                        return message.error('提示：获取分享信息失败，请检查链接是否有效！');
+                    }
+
+                    let shareToken = sharePageRes.data.share_token;
+                    let shareId = sharePageRes.data.share_id;
+
+                    if (!shareToken || !shareId) {
+                        Swal.close();
+                        return message.error('提示：获取分享令牌失败，请稍后重试！');
+                    }
+
+                    // 遍历选中的文件，调用分享下载 API 获取下载链接
+                    let downloadList = [];
+                    for (let i = 0; i < selectList.length; i++) {
+                        let item = selectList[i];
+                        if (item.file === false) continue; // 跳过文件夹
+
+                        try {
+                            let downloadRes = await base.post('https://pan.quark.cn/share/download', {
+                                "fids": [item.fid],
+                                "share_id": shareId,
+                                "share_token": shareToken
+                            }, {"content-type": "application/json;charset=utf-8", "user-agent": pan.ua});
+
+                            if (downloadRes && downloadRes.code === 0 && downloadRes.data) {
+                                downloadList.push({
+                                    file: true,
+                                    file_name: item.file_name,
+                                    fid: item.fid,
+                                    size: item.size,
+                                    download_url: downloadRes.data[0] && downloadRes.data[0].download_url ? downloadRes.data[0].download_url : ''
+                                });
+                            } else {
+                                downloadList.push({
+                                    file: true,
+                                    file_name: item.file_name,
+                                    fid: item.fid,
+                                    size: item.size,
+                                    download_url: '获取下载链接失败'
+                                });
+                            }
+                        } catch (e) {
+                            downloadList.push({
+                                file: true,
+                                file_name: item.file_name,
+                                fid: item.fid,
+                                size: item.size,
+                                download_url: '获取下载链接时发生错误'
+                            });
+                        }
+                    }
+
+                    if (downloadList.length === 0) {
+                        Swal.close();
+                        return message.error('提示：未获取到有效的下载链接！');
+                    }
+
+                    let html = this.generateDom(downloadList);
+                    this.showMainDialog(pan[mode][0], html, pan[mode][1]);
+                } catch (e) {
+                    Swal.close();
+                    return message.error('提示：获取分享页下载链接失败，请检查网络后重试！');
                 }
             }
         },
@@ -3144,15 +3223,59 @@
                 let html = this.generateDom(results);
                 this.showMainDialog(pan[mode][0], html, pan[mode][1]);
             } else {
-                Swal.close();
-                let dialog = await Swal.fire({
-                    toast: true,
-                    icon: 'info',
-                    title: `提示：请将文件<span class="tag-danger">[保存到我的网盘]</span>后下载！`,
-                    showConfirmButton: true,
-                    confirmButtonText: '我知道了',
-                    position: 'top',
-                });
+                // 分享页：通过分享 API 直接获取下载链接
+                try {
+                    // 从 URL 提取 shareKey（URL 格式: https://www.123pan.com/s/xxxxx）
+                    let shareKey = location.pathname.replace(/^\/s\//, '').split('/')[0] || '';
+                    if (!shareKey) {
+                        Swal.close();
+                        return message.error('提示：无法从链接中提取分享标识，请检查链接格式！');
+                    }
+
+                    // 遍历选中的文件，调用分享下载 API 获取下载链接
+                    let downloadList = [];
+                    for (let i = 0; i < fileList.length; i++) {
+                        let item = fileList[i];
+                        try {
+                            let res = await base.post('https://www.123pan.com/api/share/download/info', {
+                                "shareKey": shareKey,
+                                "SharePwd": "",
+                                "fileID": item.fileId
+                            }, {"content-type": "application/json;charset=utf-8", "user-agent": navigator.userAgent});
+
+                            if (res && res.code === 0 && res.data) {
+                                downloadList.push({
+                                    file_name: item.fileName,
+                                    size: item.size,
+                                    download_url: res.data.download_url || res.data.DownloadURL || ''
+                                });
+                            } else {
+                                downloadList.push({
+                                    file_name: item.fileName,
+                                    size: item.size,
+                                    download_url: '获取下载链接失败'
+                                });
+                            }
+                        } catch (e) {
+                            downloadList.push({
+                                file_name: item.fileName,
+                                size: item.size,
+                                download_url: '获取下载链接时发生错误'
+                            });
+                        }
+                    }
+
+                    if (downloadList.length === 0) {
+                        Swal.close();
+                        return message.error('提示：未获取到有效的下载链接！');
+                    }
+
+                    let html = this.generateDom(downloadList);
+                    this.showMainDialog(pan[mode][0], html, pan[mode][1]);
+                } catch (e) {
+                    Swal.close();
+                    return message.error('提示：获取分享页下载链接失败，请检查网络后重试！');
+                }
             }
         },
 
